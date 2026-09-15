@@ -217,7 +217,7 @@ async function fetchFeed(url: string, lang: Lang, category: Category): Promise<A
     if (!res.ok) return [];
     const xml = await res.text();
     const doc = parser.parse(xml) as Record<string, any>;
-    const channel = doc?.rss?.channel ?? doc?.feed ?? {};
+    const channel: any = doc?.["rss"]?.channel ?? doc?.["feed"] ?? {};
     const sourceName =
       stripHtml(text(channel?.title)) || new URL(url).hostname.replace(/^www\./, "");
     const items = asArray<Record<string, unknown>>(channel?.item ?? channel?.entry);
