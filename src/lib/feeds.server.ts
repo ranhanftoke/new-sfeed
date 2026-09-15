@@ -166,13 +166,14 @@ function text(value: unknown): string {
   return "";
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function firstImage(item: Record<string, unknown>, html: string): string | null {
   const media = item["media:content"] ?? item["media:thumbnail"];
-  for (const entry of asArray(media as Record<string, unknown>)) {
+  for (const entry of asArray<any>(media)) {
     const url = entry?.["@_url"];
     if (typeof url === "string" && url.startsWith("http")) return url;
   }
-  for (const enc of asArray(item["enclosure"] as Record<string, unknown>)) {
+  for (const enc of asArray<any>(item["enclosure"])) {
     const url = enc?.["@_url"];
     const type = String(enc?.["@_type"] ?? "");
     if (typeof url === "string" && (type.startsWith("image") || /\.(jpg|jpeg|png|webp)/i.test(url))) {
@@ -186,7 +187,7 @@ function firstImage(item: Record<string, unknown>, html: string): string | null 
 function linkOf(item: Record<string, unknown>): string {
   const link = item["link"];
   if (typeof link === "string") return link;
-  for (const entry of asArray(link as Record<string, unknown>)) {
+  for (const entry of asArray<any>(link)) {
     const href = entry?.["@_href"];
     if (typeof href === "string") return href;
     const inner = text(entry);
