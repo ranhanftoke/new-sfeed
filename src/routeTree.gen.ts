@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LangRouteImport } from './routes/$lang'
 import { Route as LangIndexRouteImport } from './routes/$lang.index'
+import { Route as LangSearchRouteImport } from './routes/$lang.search'
+import { Route as LangArticlesSlugRouteImport } from './routes/$lang.articles.$slug'
 import { Route as LangCategorySlugRouteImport } from './routes/$lang.category.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +31,16 @@ const LangIndexRoute = LangIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LangRoute,
 } as any)
+const LangSearchRoute = LangSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangArticlesSlugRoute = LangArticlesSlugRouteImport.update({
+  id: '/articles/$slug',
+  path: '/articles/$slug',
+  getParentRoute: () => LangRoute,
+} as any)
 const LangCategorySlugRoute = LangCategorySlugRouteImport.update({
   id: '/category/$slug',
   path: '/category/$slug',
@@ -38,27 +50,51 @@ const LangCategorySlugRoute = LangCategorySlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$lang': typeof LangRouteWithChildren
+  '/$lang/search': typeof LangSearchRoute
   '/$lang/': typeof LangIndexRoute
+  '/$lang/articles/$slug': typeof LangArticlesSlugRoute
   '/$lang/category/$slug': typeof LangCategorySlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$lang/search': typeof LangSearchRoute
   '/$lang': typeof LangIndexRoute
+  '/$lang/articles/$slug': typeof LangArticlesSlugRoute
   '/$lang/category/$slug': typeof LangCategorySlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$lang': typeof LangRouteWithChildren
+  '/$lang/search': typeof LangSearchRoute
   '/$lang/': typeof LangIndexRoute
+  '/$lang/articles/$slug': typeof LangArticlesSlugRoute
   '/$lang/category/$slug': typeof LangCategorySlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$lang' | '/$lang/' | '/$lang/category/$slug'
+  fullPaths:
+    | '/'
+    | '/$lang'
+    | '/$lang/search'
+    | '/$lang/'
+    | '/$lang/articles/$slug'
+    | '/$lang/category/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$lang' | '/$lang/category/$slug'
-  id: '__root__' | '/' | '/$lang' | '/$lang/' | '/$lang/category/$slug'
+  to:
+    | '/'
+    | '/$lang/search'
+    | '/$lang'
+    | '/$lang/articles/$slug'
+    | '/$lang/category/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/$lang'
+    | '/$lang/search'
+    | '/$lang/'
+    | '/$lang/articles/$slug'
+    | '/$lang/category/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -89,6 +125,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangIndexRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/search': {
+      id: '/$lang/search'
+      path: '/search'
+      fullPath: '/$lang/search'
+      preLoaderRoute: typeof LangSearchRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/articles/$slug': {
+      id: '/$lang/articles/$slug'
+      path: '/articles/$slug'
+      fullPath: '/$lang/articles/$slug'
+      preLoaderRoute: typeof LangArticlesSlugRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/category/$slug': {
       id: '/$lang/category/$slug'
       path: '/category/$slug'
@@ -100,12 +150,16 @@ declare module '@tanstack/react-router' {
 }
 
 interface LangRouteChildren {
+  LangSearchRoute: typeof LangSearchRoute
   LangIndexRoute: typeof LangIndexRoute
+  LangArticlesSlugRoute: typeof LangArticlesSlugRoute
   LangCategorySlugRoute: typeof LangCategorySlugRoute
 }
 
 const LangRouteChildren: LangRouteChildren = {
+  LangSearchRoute: LangSearchRoute,
   LangIndexRoute: LangIndexRoute,
+  LangArticlesSlugRoute: LangArticlesSlugRoute,
   LangCategorySlugRoute: LangCategorySlugRoute,
 }
 
