@@ -12,7 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LangRouteImport } from './routes/$lang'
 import { Route as LangIndexRouteImport } from './routes/$lang.index'
+import { Route as LangAboutRouteImport } from './routes/$lang.about'
+import { Route as LangEditorialRouteImport } from './routes/$lang.editorial'
+import { Route as LangPrivacyRouteImport } from './routes/$lang.privacy'
 import { Route as LangSearchRouteImport } from './routes/$lang.search'
+import { Route as LangTermsRouteImport } from './routes/$lang.terms'
 import { Route as LangArticlesSlugRouteImport } from './routes/$lang.articles.$slug'
 import { Route as LangCategorySlugRouteImport } from './routes/$lang.category.$slug'
 
@@ -31,9 +35,29 @@ const LangIndexRoute = LangIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LangRoute,
 } as any)
+const LangAboutRoute = LangAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangEditorialRoute = LangEditorialRouteImport.update({
+  id: '/editorial',
+  path: '/editorial',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangPrivacyRoute = LangPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => LangRoute,
+} as any)
 const LangSearchRoute = LangSearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => LangRoute,
+} as any)
+const LangTermsRoute = LangTermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => LangRoute,
 } as any)
 const LangArticlesSlugRoute = LangArticlesSlugRouteImport.update({
@@ -50,14 +74,22 @@ const LangCategorySlugRoute = LangCategorySlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$lang': typeof LangRouteWithChildren
+  '/$lang/about': typeof LangAboutRoute
+  '/$lang/editorial': typeof LangEditorialRoute
+  '/$lang/privacy': typeof LangPrivacyRoute
   '/$lang/search': typeof LangSearchRoute
+  '/$lang/terms': typeof LangTermsRoute
   '/$lang/': typeof LangIndexRoute
   '/$lang/articles/$slug': typeof LangArticlesSlugRoute
   '/$lang/category/$slug': typeof LangCategorySlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$lang/about': typeof LangAboutRoute
+  '/$lang/editorial': typeof LangEditorialRoute
+  '/$lang/privacy': typeof LangPrivacyRoute
   '/$lang/search': typeof LangSearchRoute
+  '/$lang/terms': typeof LangTermsRoute
   '/$lang': typeof LangIndexRoute
   '/$lang/articles/$slug': typeof LangArticlesSlugRoute
   '/$lang/category/$slug': typeof LangCategorySlugRoute
@@ -66,7 +98,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$lang': typeof LangRouteWithChildren
+  '/$lang/about': typeof LangAboutRoute
+  '/$lang/editorial': typeof LangEditorialRoute
+  '/$lang/privacy': typeof LangPrivacyRoute
   '/$lang/search': typeof LangSearchRoute
+  '/$lang/terms': typeof LangTermsRoute
   '/$lang/': typeof LangIndexRoute
   '/$lang/articles/$slug': typeof LangArticlesSlugRoute
   '/$lang/category/$slug': typeof LangCategorySlugRoute
@@ -76,14 +112,22 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$lang'
+    | '/$lang/about'
+    | '/$lang/editorial'
+    | '/$lang/privacy'
     | '/$lang/search'
+    | '/$lang/terms'
     | '/$lang/'
     | '/$lang/articles/$slug'
     | '/$lang/category/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/$lang/about'
+    | '/$lang/editorial'
+    | '/$lang/privacy'
     | '/$lang/search'
+    | '/$lang/terms'
     | '/$lang'
     | '/$lang/articles/$slug'
     | '/$lang/category/$slug'
@@ -91,7 +135,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$lang'
+    | '/$lang/about'
+    | '/$lang/editorial'
+    | '/$lang/privacy'
     | '/$lang/search'
+    | '/$lang/terms'
     | '/$lang/'
     | '/$lang/articles/$slug'
     | '/$lang/category/$slug'
@@ -125,11 +173,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangIndexRouteImport
       parentRoute: typeof LangRoute
     }
+    '/$lang/about': {
+      id: '/$lang/about'
+      path: '/about'
+      fullPath: '/$lang/about'
+      preLoaderRoute: typeof LangAboutRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/editorial': {
+      id: '/$lang/editorial'
+      path: '/editorial'
+      fullPath: '/$lang/editorial'
+      preLoaderRoute: typeof LangEditorialRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/privacy': {
+      id: '/$lang/privacy'
+      path: '/privacy'
+      fullPath: '/$lang/privacy'
+      preLoaderRoute: typeof LangPrivacyRouteImport
+      parentRoute: typeof LangRoute
+    }
     '/$lang/search': {
       id: '/$lang/search'
       path: '/search'
       fullPath: '/$lang/search'
       preLoaderRoute: typeof LangSearchRouteImport
+      parentRoute: typeof LangRoute
+    }
+    '/$lang/terms': {
+      id: '/$lang/terms'
+      path: '/terms'
+      fullPath: '/$lang/terms'
+      preLoaderRoute: typeof LangTermsRouteImport
       parentRoute: typeof LangRoute
     }
     '/$lang/articles/$slug': {
@@ -150,14 +226,22 @@ declare module '@tanstack/react-router' {
 }
 
 interface LangRouteChildren {
+  LangAboutRoute: typeof LangAboutRoute
+  LangEditorialRoute: typeof LangEditorialRoute
+  LangPrivacyRoute: typeof LangPrivacyRoute
   LangSearchRoute: typeof LangSearchRoute
+  LangTermsRoute: typeof LangTermsRoute
   LangIndexRoute: typeof LangIndexRoute
   LangArticlesSlugRoute: typeof LangArticlesSlugRoute
   LangCategorySlugRoute: typeof LangCategorySlugRoute
 }
 
 const LangRouteChildren: LangRouteChildren = {
+  LangAboutRoute: LangAboutRoute,
+  LangEditorialRoute: LangEditorialRoute,
+  LangPrivacyRoute: LangPrivacyRoute,
   LangSearchRoute: LangSearchRoute,
+  LangTermsRoute: LangTermsRoute,
   LangIndexRoute: LangIndexRoute,
   LangArticlesSlugRoute: LangArticlesSlugRoute,
   LangCategorySlugRoute: LangCategorySlugRoute,
