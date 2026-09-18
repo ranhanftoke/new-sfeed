@@ -36,40 +36,37 @@ export const FEEDS: Record<Lang, Record<Category, string[]>> = {
   ar: {
     world: [
       "https://feeds.bbci.co.uk/arabic/rss.xml",
-      "https://www.skynewsarabia.com/web/rss/section/world.xml",
+      "https://www.aljazeera.net/aljazeerarss/a7c186be-1baa-4bd4-9d80-a84db769f779/73d0e1b4-532f-45ef-b1f6-3d6b2d6b6b53",
+      "https://arabic.cnn.com/api/v1/rss/middle-east/rss.xml",
+      "https://www.france24.com/ar/rss",
     ],
-    technology: [
-      "https://feeds.bbci.co.uk/arabic/scienceandtech/rss.xml",
-      "https://www.skynewsarabia.com/web/rss/section/technology.xml",
-    ],
+    technology: ["https://arabic.cnn.com/api/v1/rss/tech/rss.xml"],
     business: [
-      "https://feeds.bbci.co.uk/arabic/business/rss.xml",
-      "https://www.skynewsarabia.com/web/rss/section/business.xml",
+      "https://www.france24.com/ar/%D8%A7%D9%82%D8%AA%D8%B5%D8%A7%D8%AF/rss",
+      "https://www.aljazeera.net/aljazeerarss/ebusiness.xml",
+      "https://arabic.cnn.com/api/v1/rss/business/rss.xml",
     ],
-    sports: [
-      "https://www.skynewsarabia.com/web/rss/section/sport.xml",
-      "https://feeds.bbci.co.uk/arabic/sports/rss.xml",
-    ],
-    culture: [
-      "https://www.skynewsarabia.com/web/rss/section/varieties.xml",
-      "https://feeds.bbci.co.uk/arabic/artandculture/rss.xml",
-    ],
-    science: [
-      "https://feeds.bbci.co.uk/arabic/scienceandtech/rss.xml",
-      "https://www.skynewsarabia.com/web/rss/section/technology.xml",
-    ],
+    sports: ["https://arabic.cnn.com/api/v1/rss/sport/rss.xml"],
+    culture: ["https://arabic.cnn.com/api/v1/rss/entertainment/rss.xml"],
+    science: ["https://arabic.cnn.com/api/v1/rss/health/rss.xml"],
   },
   zh: {
     world: [
       "https://feeds.bbci.co.uk/zhongwen/simp/rss.xml",
       "https://www.rfi.fr/cn/rss",
-      "https://cn.nytimes.com/rss/world.xml",
+      "https://feeds.feedburner.com/rsscna/intworld",
     ],
-    technology: ["https://cn.nytimes.com/rss/technology.xml"],
-    business: ["https://cn.nytimes.com/rss/business.xml"],
-    sports: ["https://cn.nytimes.com/rss/sports.xml"],
-    culture: ["https://cn.nytimes.com/rss/culture.xml"],
-    science: ["https://cn.nytimes.com/rss/science.xml"],
+    technology: [
+      "https://feeds.feedburner.com/rsscna/technology",
+      "https://www.ithome.com/rss/",
+    ],
+    business: [
+      "https://feeds.feedburner.com/rsscna/finance",
+      "https://www.ftchinese.com/rss/feed",
+    ],
+    sports: ["https://feeds.feedburner.com/rsscna/sport"],
+    culture: ["https://feeds.feedburner.com/rsscna/lifehealth"],
+    science: ["https://www.solidot.org/index.rss"],
   },
 };
 
@@ -262,8 +259,13 @@ const cache = new Map<Lang, CacheEntry>();
 const inflight = new Map<Lang, Promise<Article[]>>();
 
 async function ingest(lang: Lang): Promise<Article[]> {
+  // Specific categories win over the broad "world" wires when an item appears
+  // in both, so category pages are never starved by a general feed.
+  const ordered = [...CATEGORIES].sort((a, b) =>
+    a === "world" ? 1 : b === "world" ? -1 : 0,
+  );
   const jobs: Promise<Article[]>[] = [];
-  for (const category of CATEGORIES) {
+  for (const category of ordered) {
     for (const url of FEEDS[lang][category]) jobs.push(fetchFeed(url, lang, category));
   }
   const results = await Promise.all(jobs);

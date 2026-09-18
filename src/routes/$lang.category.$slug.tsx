@@ -8,9 +8,11 @@ import { getCategoryData } from "@/lib/news.functions";
 type Search = { page?: number };
 
 export const Route = createFileRoute("/$lang/category/$slug")({
-  validateSearch: (search: Record<string, unknown>): Search => ({
-    page: Math.max(1, Math.floor(Number(search?.["page"] ?? 1)) || 1),
-  }),
+  validateSearch: (search: Record<string, unknown>): Search => {
+    const page = Math.max(1, Math.floor(Number(search?.["page"] ?? 1)) || 1);
+    // Keep page 1 free of query clutter (clean canonical URLs).
+    return page > 1 ? { page } : {};
+  },
   loaderDeps: ({ search }) => ({ page: search.page ?? 1 }),
   beforeLoad: ({ params }) => {
     if (!isCategory(params.slug)) throw notFound();
