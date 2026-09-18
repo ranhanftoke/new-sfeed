@@ -255,8 +255,13 @@ const cache = new Map<Lang, CacheEntry>();
 const inflight = new Map<Lang, Promise<Article[]>>();
 
 async function ingest(lang: Lang): Promise<Article[]> {
+  // Specific categories win over the broad "world" wires when an item appears
+  // in both, so category pages are never starved by a general feed.
+  const ordered = [...CATEGORIES].sort((a, b) =>
+    a === "world" ? 1 : b === "world" ? -1 : 0,
+  );
   const jobs: Promise<Article[]>[] = [];
-  for (const category of CATEGORIES) {
+  for (const category of ordered) {
     for (const url of FEEDS[lang][category]) jobs.push(fetchFeed(url, lang, category));
   }
   const results = await Promise.all(jobs);
