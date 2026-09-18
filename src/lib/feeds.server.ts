@@ -41,7 +41,11 @@ export const FEEDS: Record<Lang, Record<Category, string[]>> = {
       "https://www.france24.com/ar/rss",
     ],
     technology: ["https://arabic.cnn.com/api/v1/rss/tech/rss.xml"],
-    business: ["https://arabic.cnn.com/api/v1/rss/business/rss.xml"],
+    business: [
+      "https://www.france24.com/ar/%D8%A7%D9%82%D8%AA%D8%B5%D8%A7%D8%AF/rss",
+      "https://www.aljazeera.net/aljazeerarss/ebusiness.xml",
+      "https://arabic.cnn.com/api/v1/rss/business/rss.xml",
+    ],
     sports: ["https://arabic.cnn.com/api/v1/rss/sport/rss.xml"],
     culture: ["https://arabic.cnn.com/api/v1/rss/entertainment/rss.xml"],
     science: ["https://arabic.cnn.com/api/v1/rss/health/rss.xml"],
