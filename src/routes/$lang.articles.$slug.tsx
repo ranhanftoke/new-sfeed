@@ -115,7 +115,12 @@ function ArticlePage() {
               width={1200}
               height={675}
               decoding="async"
-              className="aspect-[16/9] w-full bg-muted object-cover"
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                const fig = e.currentTarget.closest("figure");
+                if (fig) (fig as HTMLElement).style.display = "none";
+              }}
+              className="aspect-[16/9] w-full rounded-sm bg-muted object-cover object-center"
             />
             <figcaption className="mt-2 text-xs text-muted-foreground">
               {article.source}

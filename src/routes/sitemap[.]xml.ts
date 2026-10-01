@@ -16,7 +16,8 @@ export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const origin = new URL(request.url).origin;
+        const reqOrigin = new URL(request.url).origin;
+        const origin = reqOrigin.includes("localhost") ? reqOrigin : "https://new-sfeed.lovable.app";
         const { getArticles } = await import("@/lib/feeds.server");
 
         const urls: string[] = [];
