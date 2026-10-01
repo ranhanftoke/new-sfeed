@@ -166,21 +166,45 @@ function text(value: unknown): string {
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/** Rewrite known CDN thumbnail URLs to high-resolution versions. */
+function upgradeImage(url: string): string {
+  return url
+    .replace(/(ichef\.bbci\.co\.uk\/(?:ace|news)\/(?:standard|ws))\/\d+\//, "$1/976/")
+    .replace(/(ichef\.bbci\.co\.uk\/images\/ic)\/\d+x\d+\//, "$1/976x549/")
+    .replace(/([?&](?:w|width|resize)=)\d{2,3}(?=&|$)/, "$11200");
+}
+
 function firstImage(item: Record<string, unknown>, html: string): string | null {
-  const media = item["media:content"] ?? item["media:thumbnail"];
-  for (const entry of asArray<any>(media)) {
-    const url = entry?.["@_url"];
-    if (typeof url === "string" && url.startsWith("http")) return url;
+  const candidates: { url: string; width: number }[] = [];
+  for (const key of ["media:content", "media:thumbnail"]) {
+    for (const entry of asArray<any>(item[key])) {
+      const url = entry?.["@_url"];
+      if (typeof url === "string" && url.startsWith("http")) {
+        candidates.push({ url, width: Number(entry?.["@_width"]) || 0 });
+      }
+    }
+  }
+  for (const group of asArray<any>(item["media:group"])) {
+    for (const entry of asArray<any>(group?.["media:content"])) {
+      const url = entry?.["@_url"];
+      if (typeof url === "string" && url.startsWith("http")) {
+        candidates.push({ url, width: Number(entry?.["@_width"]) || 0 });
+      }
+    }
+  }
+  if (candidates.length > 0) {
+    candidates.sort((a, b) => b.width - a.width);
+    return upgradeImage(candidates[0].url);
   }
   for (const enc of asArray<any>(item["enclosure"])) {
     const url = enc?.["@_url"];
     const type = String(enc?.["@_type"] ?? "");
     if (typeof url === "string" && (type.startsWith("image") || /\.(jpg|jpeg|png|webp)/i.test(url))) {
-      return url;
+      return upgradeImage(url);
     }
   }
   const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-  return match?.[1] ?? null;
+  return match?.[1] ? upgradeImage(match[1]) : null;
 }
 
 function linkOf(item: Record<string, unknown>): string {
