@@ -196,7 +196,7 @@ function firstImage(item: Record<string, unknown>, html: string): string | null 
   }
   if (candidates.length > 0) {
     candidates.sort((a, b) => b.width - a.width);
-    return upgradeImage(candidates[0].url);
+    return upgradeImage(candidates[0]!.url);
   }
   for (const enc of asArray<any>(item["enclosure"])) {
     const url = enc?.["@_url"];
