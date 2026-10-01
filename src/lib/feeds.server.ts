@@ -171,7 +171,9 @@ function upgradeImage(url: string): string {
   return url
     .replace(/(ichef\.bbci\.co\.uk\/(?:ace|news)\/(?:standard|ws))\/\d+\//, "$1/976/")
     .replace(/(ichef\.bbci\.co\.uk\/images\/ic)\/\d+x\d+\//, "$1/976x549/")
-    .replace(/([?&](?:w|width|resize)=)\d{2,3}(?=&|$)/, "$11200");
+    .replace(/([?&](?:w|width|resize)=)\d{2,3}(?=&|$)/, (m, p: string) =>
+      url.includes("guim.co.uk") ? m : `${p}1200`,
+    );
 }
 
 function firstImage(item: Record<string, unknown>, html: string): string | null {
