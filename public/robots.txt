@@ -24,4 +24,4 @@ User-agent: *
 Allow: /
 Disallow: /*/search
 
-Sitemap: /sitemap.xml
+Sitemap: https://new-sfeed.lovable.app/sitemap.xml

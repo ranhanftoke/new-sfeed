@@ -114,10 +114,12 @@ export function slugify(title: string, link: string): string {
     .replace(/[^\p{L}\p{N}]+/gu, "-")
     .replace(/^-+|-+$/g, "")
     .split("-")
-    .slice(0, 10)
+    .filter(Boolean)
+    .slice(0, 12)
     .join("-")
-    .slice(0, 90);
-  return `${base || "story"}-${hash(link)}`;
+    .slice(0, 100)
+    .replace(/-+$/g, "");
+  return base || `story-${hash(link)}`;
 }
 
 /** Keyword extraction with no external services: frequency over title + summary. */
