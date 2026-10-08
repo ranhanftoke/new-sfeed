@@ -22,9 +22,9 @@ export const Route = createFileRoute("/$lang")({
         ...LANGS.map((code) => ({
           rel: "alternate",
           hrefLang: LANG_META[code].htmlLang,
-          href: `/${code}`,
+          href: `https://new-sfeed.lovable.app/${code}`,
         })),
-        { rel: "alternate", hrefLang: "x-default", href: "/en" },
+        { rel: "alternate", hrefLang: "x-default", href: "https://new-sfeed.lovable.app/en" },
       ],
     };
   },

@@ -29,10 +29,10 @@ export const Route = createFileRoute("/$lang/contact")({
         { property: "og:title", content: title },
         { property: "og:description", content: page.intro.slice(0, 155) },
         { property: "og:type", content: "website" },
-        { property: "og:url", content: `/${lang}/contact` },
+        { property: "og:url", content: `https://new-sfeed.lovable.app/${lang}/contact` },
         { name: "twitter:card", content: "summary_large_image" },
       ],
-      links: [{ rel: "canonical", href: `/${lang}/contact` }],
+      links: [{ rel: "canonical", href: `https://new-sfeed.lovable.app/${lang}/contact` }],
     };
   },
   component: ContactPage,

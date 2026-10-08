@@ -34,10 +34,10 @@ export const Route = createFileRoute("/$lang/category/$slug")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
-        { property: "og:url", content: `/${lang}/category/${category}` },
+        { property: "og:url", content: `https://new-sfeed.lovable.app/${lang}/category/${category}` },
         { name: "twitter:card", content: "summary_large_image" },
       ],
-      links: [{ rel: "canonical", href: `/${lang}/category/${category}` }],
+      links: [{ rel: "canonical", href: `https://new-sfeed.lovable.app/${lang}/category/${category}` }],
     };
   },
   errorComponent: () => <p className="py-10 text-center text-muted-foreground">—</p>,

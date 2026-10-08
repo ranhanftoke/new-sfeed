@@ -23,7 +23,7 @@ export const Route = createFileRoute("/$lang/articles/$slug")({
       };
     }
     const { article } = loaderData;
-    const url = `/${lang}/articles/${article.slug}`;
+    const url = `https://new-sfeed.lovable.app/${lang}/articles/${article.slug}`;
     const meta = [
       { title: `${article.title} — ${t.siteName}` },
       { name: "description", content: article.summary },

@@ -16,10 +16,10 @@ export const Route = createFileRoute("/$lang/about")({
         { property: "og:title", content: title },
         { property: "og:description", content: page.intro.slice(0, 155) },
         { property: "og:type", content: "website" },
-        { property: "og:url", content: `/${lang}/about` },
+        { property: "og:url", content: `https://new-sfeed.lovable.app/${lang}/about` },
         { name: "twitter:card", content: "summary_large_image" },
       ],
-      links: [{ rel: "canonical", href: `/${lang}/about` }],
+      links: [{ rel: "canonical", href: `https://new-sfeed.lovable.app/${lang}/about` }],
     };
   },
   component: AboutPage,
