@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LangRouteImport } from './routes/$lang'
+import { Route as Google36c3484646b2578fDothtmlRouteImport } from './routes/google36c3484646b2578f[.]html'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as LangIndexRouteImport } from './routes/$lang.index'
 import { Route as LangAboutRouteImport } from './routes/$lang.about'
@@ -32,6 +33,12 @@ const LangRoute = LangRouteImport.update({
   path: '/$lang',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Google36c3484646b2578fDothtmlRoute =
+  Google36c3484646b2578fDothtmlRouteImport.update({
+    id: '/google36c3484646b2578f.html',
+    path: '/google36c3484646b2578f.html',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -86,6 +93,7 @@ const LangCategorySlugRoute = LangCategorySlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$lang': typeof LangRouteWithChildren
+  '/google36c3484646b2578f.html': typeof Google36c3484646b2578fDothtmlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/$lang/about': typeof LangAboutRoute
   '/$lang/contact': typeof LangContactRoute
@@ -99,6 +107,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/google36c3484646b2578f.html': typeof Google36c3484646b2578fDothtmlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/$lang/about': typeof LangAboutRoute
   '/$lang/contact': typeof LangContactRoute
@@ -114,6 +123,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$lang': typeof LangRouteWithChildren
+  '/google36c3484646b2578f.html': typeof Google36c3484646b2578fDothtmlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/$lang/about': typeof LangAboutRoute
   '/$lang/contact': typeof LangContactRoute
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$lang'
+    | '/google36c3484646b2578f.html'
     | '/sitemap.xml'
     | '/$lang/about'
     | '/$lang/contact'
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/google36c3484646b2578f.html'
     | '/sitemap.xml'
     | '/$lang/about'
     | '/$lang/contact'
@@ -157,6 +169,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$lang'
+    | '/google36c3484646b2578f.html'
     | '/sitemap.xml'
     | '/$lang/about'
     | '/$lang/contact'
@@ -172,6 +185,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LangRoute: typeof LangRouteWithChildren
+  Google36c3484646b2578fDothtmlRoute: typeof Google36c3484646b2578fDothtmlRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
@@ -189,6 +203,13 @@ declare module '@tanstack/react-router' {
       path: '/$lang'
       fullPath: '/$lang'
       preLoaderRoute: typeof LangRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/google36c3484646b2578f.html': {
+      id: '/google36c3484646b2578f.html'
+      path: '/google36c3484646b2578f.html'
+      fullPath: '/google36c3484646b2578f.html'
+      preLoaderRoute: typeof Google36c3484646b2578fDothtmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -293,6 +314,7 @@ const LangRouteWithChildren = LangRoute._addFileChildren(LangRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LangRoute: LangRouteWithChildren,
+  Google36c3484646b2578fDothtmlRoute: Google36c3484646b2578fDothtmlRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport
