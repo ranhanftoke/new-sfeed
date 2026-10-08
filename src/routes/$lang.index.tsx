@@ -18,10 +18,10 @@ export const Route = createFileRoute("/$lang/")({
         { property: "og:title", content: title },
         { property: "og:description", content: t.siteDescription },
         { property: "og:type", content: "website" },
-        { property: "og:url", content: `/${lang}` },
+        { property: "og:url", content: `https://new-sfeed.lovable.app/${lang}` },
         { name: "twitter:card", content: "summary_large_image" },
       ],
-      links: [{ rel: "canonical", href: `/${lang}` }],
+      links: [{ rel: "canonical", href: `https://new-sfeed.lovable.app/${lang}` }],
       scripts: [
         {
           type: "application/ld+json",

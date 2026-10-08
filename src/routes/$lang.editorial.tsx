@@ -16,10 +16,10 @@ export const Route = createFileRoute("/$lang/editorial")({
         { property: "og:title", content: title },
         { property: "og:description", content: page.intro.slice(0, 155) },
         { property: "og:type", content: "website" },
-        { property: "og:url", content: `/${lang}/editorial` },
+        { property: "og:url", content: `https://new-sfeed.lovable.app/${lang}/editorial` },
         { name: "twitter:card", content: "summary_large_image" },
       ],
-      links: [{ rel: "canonical", href: `/${lang}/editorial` }],
+      links: [{ rel: "canonical", href: `https://new-sfeed.lovable.app/${lang}/editorial` }],
     };
   },
   component: EditorialPage,

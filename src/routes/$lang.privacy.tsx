@@ -16,10 +16,10 @@ export const Route = createFileRoute("/$lang/privacy")({
         { property: "og:title", content: title },
         { property: "og:description", content: page.intro.slice(0, 155) },
         { property: "og:type", content: "website" },
-        { property: "og:url", content: `/${lang}/privacy` },
+        { property: "og:url", content: `https://new-sfeed.lovable.app/${lang}/privacy` },
         { name: "twitter:card", content: "summary_large_image" },
       ],
-      links: [{ rel: "canonical", href: `/${lang}/privacy` }],
+      links: [{ rel: "canonical", href: `https://new-sfeed.lovable.app/${lang}/privacy` }],
     };
   },
   component: PrivacyPage,
