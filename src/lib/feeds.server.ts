@@ -109,9 +109,11 @@ function hash(input: string): string {
 }
 
 export function slugify(title: string, link: string): string {
+  // Letters only: no digits, no symbols, no punctuation — just the words of
+  // the title separated by hyphens (works for Latin, Arabic and CJK titles).
   const base = title
     .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/[^\p{L}]+/gu, "-")
     .replace(/^-+|-+$/g, "")
     .split("-")
     .filter(Boolean)
