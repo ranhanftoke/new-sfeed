@@ -33,4 +33,6 @@ export type CategoryPageData = {
 export type ArticlePageData = {
   article: Article;
   related: ArticleCardData[];
+  inline: ArticleCardData[];
+  popular: ArticleCardData[];
 };
