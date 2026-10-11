@@ -25,3 +25,4 @@ Allow: /
 Disallow: /*/search
 
 Sitemap: https://new-sfeed.lovable.app/sitemap.xml
+Sitemap: https://new-sfeed.lovable.app/news-sitemap.xml
