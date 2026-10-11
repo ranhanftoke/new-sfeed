@@ -76,7 +76,8 @@ function ArticlePage() {
   const { lang: raw } = Route.useParams();
   const lang = (isLang(raw) ? raw : "en") as Lang;
   const t = T[lang];
-  const { article, related } = Route.useLoaderData();
+  const { article, related, inline, popular } = Route.useLoaderData();
+  const L = LABELS[lang];
 
   const paragraphs = article.content
     .split(/(?<=[.!?。！؟])\s+/)
@@ -129,9 +130,40 @@ function ArticlePage() {
         ) : null}
 
         <div className="article-body mt-6 space-y-4">
-          {paragraphs.map((paragraph, i) => (
-            <p key={i}>{paragraph}</p>
-          ))}
+          {paragraphs.map((paragraph, i) => {
+            const linkIdx = i === 0 ? 0 : i === 2 ? 1 : -1;
+            const rec = linkIdx >= 0 ? inline[linkIdx] : undefined;
+            return (
+              <div key={i} className="space-y-4">
+                <p>{paragraph}</p>
+                {rec ? (
+                  <p className="border-s-4 border-primary bg-muted/50 px-4 py-3 text-base">
+                    <span className="eyebrow me-2 text-primary">{L.alsoRead}</span>
+                    <Link
+                      to="/$lang/articles/$slug"
+                      params={{ lang, slug: rec.slug }}
+                      className="font-semibold text-foreground underline-offset-4 hover:text-primary hover:underline"
+                    >
+                      {rec.title}
+                    </Link>
+                  </p>
+                ) : null}
+              </div>
+            );
+          })}
+          {paragraphs.length < 3 &&
+            inline.slice(paragraphs.length < 1 ? 0 : 1).map((rec) => (
+              <p key={rec.slug} className="border-s-4 border-primary bg-muted/50 px-4 py-3 text-base">
+                <span className="eyebrow me-2 text-primary">{L.alsoRead}</span>
+                <Link
+                  to="/$lang/articles/$slug"
+                  params={{ lang, slug: rec.slug }}
+                  className="font-semibold text-foreground hover:text-primary hover:underline"
+                >
+                  {rec.title}
+                </Link>
+              </p>
+            ))}
         </div>
 
         {article.category === "sports" ? <GlobalScoreCallout lang={lang} /> : null}
@@ -169,7 +201,7 @@ function ArticlePage() {
             <h2 className="eyebrow border-b-2 border-foreground pb-2 text-foreground">
               {t.related}
             </h2>
-            <div className="mt-5 grid gap-6 sm:grid-cols-2">
+            <div className="mt-5 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
               {related.map((item) => (
                 <ArticleCard key={item.slug} article={item} lang={lang} />
               ))}
@@ -178,9 +210,42 @@ function ArticlePage() {
         ) : null}
       </article>
 
-      <aside className="hidden lg:block">
-        <AdSlot variant="sidebar" label={t.advertisement} />
+      <aside className="min-w-0">
+        <div className="space-y-8 lg:sticky lg:top-6">
+          {popular.length > 0 ? (
+            <section>
+              <h2 className="eyebrow border-b-2 border-foreground pb-2 text-foreground">
+                {L.mostRead}
+              </h2>
+              <ol className="mt-4 space-y-4">
+                {popular.map((item, i) => (
+                  <li key={item.slug} className="flex gap-3">
+                    <span className="font-display text-3xl leading-none font-bold text-primary">
+                      {i + 1}
+                    </span>
+                    <Link
+                      to="/$lang/articles/$slug"
+                      params={{ lang, slug: item.slug }}
+                      className="text-sm leading-snug font-semibold text-foreground hover:text-primary"
+                    >
+                      {item.title}
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ) : null}
+          <div className="hidden lg:block">
+            <AdSlot variant="sidebar" label={t.advertisement} />
+          </div>
+        </div>
       </aside>
     </div>
   );
 }
+
+const LABELS: Record<Lang, { alsoRead: string; mostRead: string }> = {
+  en: { alsoRead: "Also read", mostRead: "Most read" },
+  ar: { alsoRead: "اقرأ أيضاً", mostRead: "الأكثر قراءة" },
+  zh: { alsoRead: "延伸阅读", mostRead: "热门阅读" },
+};

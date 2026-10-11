@@ -86,10 +86,22 @@ export const getArticleData = createServerFn({ method: "GET" })
       }))
       .filter((entry) => entry.score > 0)
       .sort((x, y) => y.score - x.score)
-      .slice(0, 5)
+      .slice(0, 8)
       .map((entry) => card(entry.a));
 
-    return { article, related: scored };
+    const used = new Set([article.slug, ...scored.map((r) => r.slug)]);
+    const sorted = [...all].sort((x, y) => y.publishedAt.localeCompare(x.publishedAt));
+    const inline = sorted
+      .filter((a) => !used.has(a.slug) && a.category === article.category)
+      .slice(0, 2)
+      .map(card);
+    inline.forEach((r) => used.add(r.slug));
+    const popular = sorted
+      .filter((a) => !used.has(a.slug) && a.image)
+      .slice(0, 6)
+      .map(card);
+
+    return { article, related: scored, inline, popular };
   });
 
 export const searchArticles = createServerFn({ method: "GET" })
