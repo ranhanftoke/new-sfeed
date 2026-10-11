@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LangRouteImport } from './routes/$lang'
 import { Route as Google36c3484646b2578fDothtmlRouteImport } from './routes/google36c3484646b2578f[.]html'
+import { Route as NewsSitemapDotxmlRouteImport } from './routes/news-sitemap[.]xml'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as LangIndexRouteImport } from './routes/$lang.index'
 import { Route as LangAboutRouteImport } from './routes/$lang.about'
@@ -39,6 +40,11 @@ const Google36c3484646b2578fDothtmlRoute =
     path: '/google36c3484646b2578f.html',
     getParentRoute: () => rootRouteImport,
   } as any)
+const NewsSitemapDotxmlRoute = NewsSitemapDotxmlRouteImport.update({
+  id: '/news-sitemap.xml',
+  path: '/news-sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$lang': typeof LangRouteWithChildren
   '/google36c3484646b2578f.html': typeof Google36c3484646b2578fDothtmlRoute
+  '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/$lang/about': typeof LangAboutRoute
   '/$lang/contact': typeof LangContactRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/google36c3484646b2578f.html': typeof Google36c3484646b2578fDothtmlRoute
+  '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/$lang/about': typeof LangAboutRoute
   '/$lang/contact': typeof LangContactRoute
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$lang': typeof LangRouteWithChildren
   '/google36c3484646b2578f.html': typeof Google36c3484646b2578fDothtmlRoute
+  '/news-sitemap.xml': typeof NewsSitemapDotxmlRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/$lang/about': typeof LangAboutRoute
   '/$lang/contact': typeof LangContactRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$lang'
     | '/google36c3484646b2578f.html'
+    | '/news-sitemap.xml'
     | '/sitemap.xml'
     | '/$lang/about'
     | '/$lang/contact'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/google36c3484646b2578f.html'
+    | '/news-sitemap.xml'
     | '/sitemap.xml'
     | '/$lang/about'
     | '/$lang/contact'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$lang'
     | '/google36c3484646b2578f.html'
+    | '/news-sitemap.xml'
     | '/sitemap.xml'
     | '/$lang/about'
     | '/$lang/contact'
@@ -186,6 +198,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LangRoute: typeof LangRouteWithChildren
   Google36c3484646b2578fDothtmlRoute: typeof Google36c3484646b2578fDothtmlRoute
+  NewsSitemapDotxmlRoute: typeof NewsSitemapDotxmlRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
@@ -210,6 +223,13 @@ declare module '@tanstack/react-router' {
       path: '/google36c3484646b2578f.html'
       fullPath: '/google36c3484646b2578f.html'
       preLoaderRoute: typeof Google36c3484646b2578fDothtmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news-sitemap.xml': {
+      id: '/news-sitemap.xml'
+      path: '/news-sitemap.xml'
+      fullPath: '/news-sitemap.xml'
+      preLoaderRoute: typeof NewsSitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -315,6 +335,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LangRoute: LangRouteWithChildren,
   Google36c3484646b2578fDothtmlRoute: Google36c3484646b2578fDothtmlRoute,
+  NewsSitemapDotxmlRoute: NewsSitemapDotxmlRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport
