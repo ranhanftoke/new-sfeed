@@ -101,7 +101,8 @@ export const getArticleData = createServerFn({ method: "GET" })
       .slice(0, 6)
       .map(card);
 
-    return { article, related: scored, inline, popular };
+    const isDeveloping = Date.now() - new Date(article.publishedAt).getTime() < 6 * 3600 * 1000;
+    return { article, related: scored, inline, popular, isDeveloping };
   });
 
 export const searchArticles = createServerFn({ method: "GET" })
