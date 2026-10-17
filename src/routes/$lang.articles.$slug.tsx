@@ -80,7 +80,8 @@ function ArticlePage() {
   const { article, related, inline, popular, isDeveloping } = Route.useLoaderData();
   const L = LABELS[lang];
 
-  const paragraphs = article.content
+  const bodyText = article.aiArticle ?? article.content;
+  const paragraphs = bodyText
     .split(/(?<=[.!?。！؟])\s+/)
     .reduce<string[]>((acc, sentence) => {
       const last = acc[acc.length - 1];
@@ -137,7 +138,10 @@ function ArticlePage() {
           </figure>
         ) : null}
 
-        <div className="article-body mt-6 space-y-4">
+        {article.aiArticle ? (
+          <p className="eyebrow mt-6 text-primary">✨ {L.aiBadge}</p>
+        ) : null}
+        <div className={`article-body ${article.aiArticle ? "mt-3" : "mt-6"} space-y-4">
           {paragraphs.map((paragraph, i) => {
             const linkIdx = i === 0 ? 0 : i === 2 ? 1 : -1;
             const rec = linkIdx >= 0 ? inline[linkIdx] : undefined;
@@ -252,8 +256,8 @@ function ArticlePage() {
   );
 }
 
-const LABELS: Record<Lang, { alsoRead: string; mostRead: string }> = {
-  en: { alsoRead: "Also read", mostRead: "Most read" },
-  ar: { alsoRead: "اقرأ أيضاً", mostRead: "الأكثر قراءة" },
-  zh: { alsoRead: "延伸阅读", mostRead: "热门阅读" },
+const LABELS: Record<Lang, { alsoRead: string; mostRead: string; aiBadge: string }> = {
+  en: { alsoRead: "Also read", mostRead: "Most read", aiBadge: "AI-assisted editorial version" },
+  ar: { alsoRead: "اقرأ أيضاً", mostRead: "الأكثر قراءة", aiBadge: "نسخة تحريرية بمساعدة الذكاء الاصطناعي" },
+  zh: { alsoRead: "延伸阅读", mostRead: "热门阅读", aiBadge: "AI 辅助编辑版本" },
 };
