@@ -2,7 +2,6 @@ name: ingest-news
 
 # Pulls RSS feeds every 15 minutes and stores articles as JSON on the `data`
 # branch (data/{lang}/latest.json). No external database — GitHub only.
-# Uses the automatic GITHUB_TOKEN, no secrets needed.
 #
 # NOTE on GitHub Actions minutes: scheduled runs on a PRIVATE repo consume
 # the 2,000 min/month free quota (≈4,300 min/month at 15-min cadence).
@@ -25,3 +24,5 @@ jobs:
           bun-version: latest
       - run: bun install
       - run: bun scripts/ingest.ts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
