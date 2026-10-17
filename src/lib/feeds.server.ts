@@ -288,7 +288,7 @@ type CacheEntry = { at: number; articles: Article[] };
 const cache = new Map<Lang, CacheEntry>();
 const inflight = new Map<Lang, Promise<Article[]>>();
 
-async function ingest(lang: Lang): Promise<Article[]> {
+export async function ingest(lang: Lang): Promise<Article[]> {
   // Specific categories win over the broad "world" wires when an item appears
   // in both, so category pages are never starved by a general feed.
   const ordered = [...CATEGORIES].sort((a, b) =>
@@ -312,8 +312,43 @@ async function ingest(lang: Lang): Promise<Article[]> {
   );
 }
 
-/** Cached article store for a language; refreshes at most every 15 minutes. */
+/**
+ * Article store for a language.
+ * 1) Postgres archive first (stable URLs, permanent history) when DATABASE_URL is set.
+ * 2) Fallback: live RSS + 15-minute in-memory cache (previous behavior).
+ */
 export async function getArticles(lang: Lang): Promise<Article[]> {
+  if (process.env.DATABASE_URL) {
+    try {
+      const { getDb } = await import("./db");
+      const { articles } = await import("../../drizzle/schema");
+      const { desc, eq } = await import("drizzle-orm");
+      const rows = await getDb()
+        .select()
+        .from(articles)
+        .where(eq(articles.lang, lang))
+        .orderBy(desc(articles.publishedAt))
+        .limit(600);
+      if (rows.length > 0) {
+        return rows.map((r) => ({
+          slug: r.slug,
+          title: r.title,
+          summary: r.summary ?? "",
+          content: r.content ?? "",
+          link: r.link,
+          source: r.source ?? "",
+          category: (r.category as Category) ?? "world",
+          lang: (r.lang as Lang) ?? lang,
+          publishedAt: r.publishedAt ? r.publishedAt.toISOString() : new Date().toISOString(),
+          image: r.image,
+          tags: r.tags ?? [],
+        }));
+      }
+    } catch {
+      // fall through to live RSS
+    }
+  }
+
   const cached = cache.get(lang);
   if (cached && Date.now() - cached.at < TTL_MS) return cached.articles;
 
@@ -321,9 +356,9 @@ export async function getArticles(lang: Lang): Promise<Article[]> {
   if (existing) return existing;
 
   const job = ingest(lang)
-    .then((articles) => {
-      if (articles.length > 0) cache.set(lang, { at: Date.now(), articles });
-      return articles.length > 0 ? articles : (cached?.articles ?? []);
+    .then((arts) => {
+      if (arts.length > 0) cache.set(lang, { at: Date.now(), articles: arts });
+      return arts.length > 0 ? arts : (cached?.articles ?? []);
     })
     .catch(() => cached?.articles ?? [])
     .finally(() => inflight.delete(lang));
