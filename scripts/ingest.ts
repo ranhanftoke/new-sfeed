@@ -16,8 +16,8 @@ const MAX_KEEP = 500;
 
 // AI article generation (Gemini). Gracefully skipped when GEMINI_API_KEY is absent.
 const GEMINI_KEY = process.env.GEMINI_API_KEY || "";
-const MAX_GENERATE_PER_RUN = 25;
-const GENERATE_CONCURRENCY = 4;
+const MAX_GENERATE_PER_RUN = 15;
+const GENERATE_DELAY_MS = 7000; // sequential pacing: stays under the free-tier RPM limit
 const LANG_NAMES: Record<string, string> = { en: "English", ar: "Arabic", zh: "Chinese (Simplified)" };
 
 function buildPrompt(a: Article): string {
@@ -38,7 +38,7 @@ function buildPrompt(a: Article): string {
   );
 }
 
-async function generateArticle(a: Article): Promise<string | null> {
+async function generateArticle(a: Article, attempt = 1): Promise<string | null> {
   try {
     const r = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
@@ -55,6 +55,11 @@ async function generateArticle(a: Article): Promise<string | null> {
         }),
       },
     );
+    if (r.status === 429 && attempt === 1) {
+      console.error(`gemini 429 for ${a.slug} - waiting 65s and retrying once`);
+      await new Promise((res) => setTimeout(res, 65000));
+      return generateArticle(a, 2);
+    }
     if (!r.ok) {
       console.error(`gemini ${r.status} for ${a.slug}`);
       return null;
@@ -135,17 +140,14 @@ async function main() {
       .slice(0, MAX_KEEP);
     if (GEMINI_KEY) {
       const todo = merged.filter((a) => !a.aiArticle).slice(0, MAX_GENERATE_PER_RUN);
-      console.log(`[${lang}] generating ${todo.length} AI articles`);
-      for (let i = 0; i < todo.length; i += GENERATE_CONCURRENCY) {
-        const batch = todo.slice(i, i + GENERATE_CONCURRENCY);
-        const results = await Promise.all(batch.map(generateArticle));
-        const now = new Date().toISOString();
-        batch.forEach((a, k) => {
-          if (results[k]) {
-            a.aiArticle = results[k];
-            a.aiGeneratedAt = now;
-          }
-        });
+      console.log(`[${lang}] generating ${todo.length} AI articles (sequential, paced)`);
+      for (const a of todo) {
+        const text = await generateArticle(a);
+        if (text) {
+          a.aiArticle = text;
+          a.aiGeneratedAt = new Date().toISOString();
+        }
+        await new Promise((res) => setTimeout(res, GENERATE_DELAY_MS));
       }
     } else {
       console.log(`[${lang}] GEMINI_API_KEY absent — skipping AI article generation`);
