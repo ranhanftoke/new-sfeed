@@ -1,14 +1,15 @@
 name: ingest-news
 
-# Pulls RSS feeds every 15 minutes and stores articles as JSON on the `data`
+# Pulls RSS feeds every hour and stores articles as JSON on the `data`
 # branch (data/{lang}/latest.json). No external database — GitHub only.
+# Uses the automatic GITHUB_TOKEN, no secrets needed.
 #
-# NOTE on GitHub Actions minutes: scheduled runs on a PRIVATE repo consume
-# the 2,000 min/month free quota (≈4,300 min/month at 15-min cadence).
-# Make the repo PUBLIC for unlimited free minutes, or lower the cadence.
+# Hourly cadence ≈ 1,080 Actions minutes/month — inside the 2,000 min/month
+# free quota for PRIVATE repos. (Every 15 min would need ≈4,300 min/month,
+# which exceeds the free quota unless the repo is public.)
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "0 * * * *"
   workflow_dispatch: {}
 
 jobs:
