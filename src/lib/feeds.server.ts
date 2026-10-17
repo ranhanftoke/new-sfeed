@@ -81,7 +81,7 @@ const STOPWORDS = new Set(
   (
     "the a an and or of to in on for with from by at as is are was were be been will would could should " +
     "this that these those it its his her their our your my not no but if then than so such about after " +
-    "before over under more most new says say said who what when where why how first two three you we they " +
+    "before over under more most new says say said who what when where why how first two three you we they have has had having win wins won winning beat beats " +
     "من في على عن الى إلى مع هذا هذه ذلك التي الذي كان كانت يكون بعد قبل بين خلال حول أن إن ما لا هو هي هم " +
     "كل قد لكن أو ثم عند لدى منذ حتى ضد نحو أمام دون سوف كما وقد وقال قال أكثر أول"
   ).split(/\s+/),
@@ -100,6 +100,18 @@ function stripHtml(input: string): string {
     .replace(/&gt;/g, ">")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/**
+ * Truncate at a word boundary with an ellipsis. CJK text (no spaces) is cut
+ * directly. Never leaves a mid-word cut like "the promising yo".
+ */
+function smartTruncate(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max);
+  const lastSpace = cut.lastIndexOf(" ");
+  const at = lastSpace > max * 0.4 ? lastSpace : max;
+  return cut.slice(0, at).trimEnd() + "\u2026";
 }
 
 function hash(input: string): string {
@@ -139,7 +151,7 @@ export function extractTags(title: string, summary: string): string[] {
 
   for (const raw of text.split(/[^\p{L}\p{N}]+/u)) {
     const word = raw.trim();
-    if (word.length < 3) continue;
+    if (word.length < 4) continue; // skip stubs like #cup / #win
     const lower = word.toLowerCase();
     if (STOPWORDS.has(lower)) continue;
     if (/^[\u4e00-\u9fff]+$/.test(word)) continue;
@@ -260,7 +272,7 @@ async function fetchFeed(url: string, lang: Lang, category: Category): Promise<A
         text(item["description"]) ||
         text(item["summary"]);
       const body = stripHtml(rawBody);
-      const summary = body.slice(0, 260);
+      const summary = smartTruncate(body, 260);
       articles.push({
         slug: slugify(title, link),
         title,
