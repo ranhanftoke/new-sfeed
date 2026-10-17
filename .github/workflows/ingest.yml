@@ -1,0 +1,27 @@
+name: ingest-news
+
+# Pulls RSS feeds every 15 minutes and stores articles as JSON on the `data`
+# branch (data/{lang}/latest.json). No external database — GitHub only.
+# Uses the automatic GITHUB_TOKEN, no secrets needed.
+#
+# NOTE on GitHub Actions minutes: scheduled runs on a PRIVATE repo consume
+# the 2,000 min/month free quota (≈4,300 min/month at 15-min cadence).
+# Make the repo PUBLIC for unlimited free minutes, or lower the cadence.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install
+      - run: bun scripts/ingest.ts
