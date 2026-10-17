@@ -12,6 +12,8 @@ export type Article = {
   publishedAt: string;
   image: string | null;
   tags: string[];
+  /** Optional editorial note ("why it matters"). Shown above the auto context box. */
+  editorial?: string | null;
 };
 
 export type ArticleCardData = Omit<Article, "content">;
@@ -35,4 +37,6 @@ export type ArticlePageData = {
   related: ArticleCardData[];
   inline: ArticleCardData[];
   popular: ArticleCardData[];
+  /** True when the article was published less than 6h ago (computed server-side). */
+  isDeveloping: boolean;
 };
