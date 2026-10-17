@@ -64,6 +64,13 @@ async function main() {
     const fresh = await ingest(lang as Lang);
     const { articles: existing, sha } = await readJson(`data/${lang}/latest.json`);
     const seen = new Set(existing.map((a) => a.link));
+    // Preserve editorial notes already saved on archived articles.
+    const editorialByLink = new Map(
+      existing.filter((a) => a.editorial).map((a) => [a.link, a.editorial as string]),
+    );
+    for (const a of fresh) {
+      if (!a.editorial && editorialByLink.has(a.link)) a.editorial = editorialByLink.get(a.link);
+    }
     const merged = [...fresh.filter((a) => !seen.has(a.link)), ...existing]
       .sort((a, b) => +new Date(b.publishedAt) - +new Date(a.publishedAt))
       .slice(0, MAX_KEEP);
