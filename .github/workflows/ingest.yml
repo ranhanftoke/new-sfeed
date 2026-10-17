@@ -15,7 +15,7 @@ on:
 jobs:
   ingest:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
       contents: write
     steps:
@@ -27,3 +27,6 @@ jobs:
       - run: bun scripts/ingest.ts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: enables AI article generation. When the secret is missing it
+          # resolves to an empty string and ingest skips generation gracefully.
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
