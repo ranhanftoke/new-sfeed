@@ -3,6 +3,7 @@ import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 import { AdSlot } from "@/components/site/AdSlot";
 import { ArticleCard } from "@/components/site/ArticleCard";
 import { GlobalScoreCallout } from "@/components/site/GlobalScoreCallout";
+import { WhyItMatters } from "@/components/site/WhyItMatters";
 import { T, formatDate, isLang, type Lang } from "@/lib/i18n";
 import { getArticleData } from "@/lib/news.functions";
 
@@ -76,7 +77,7 @@ function ArticlePage() {
   const { lang: raw } = Route.useParams();
   const lang = (isLang(raw) ? raw : "en") as Lang;
   const t = T[lang];
-  const { article, related, inline, popular } = Route.useLoaderData();
+  const { article, related, inline, popular, isDeveloping } = Route.useLoaderData();
   const L = LABELS[lang];
 
   const paragraphs = article.content
@@ -107,6 +108,13 @@ function ArticlePage() {
           {t.published}:{" "}
           <time dateTime={article.publishedAt}>{formatDate(article.publishedAt, lang)}</time>
         </p>
+
+        <WhyItMatters
+          lang={lang}
+          article={article}
+          relatedCount={related.length}
+          isDeveloping={isDeveloping}
+        />
 
         {article.image ? (
           <figure className="mt-6">
