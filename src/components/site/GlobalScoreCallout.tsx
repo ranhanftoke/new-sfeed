@@ -6,7 +6,10 @@ import { T } from "@/lib/i18n";
 export function GlobalScoreCallout({ lang }: { lang: Lang }) {
   const t = T[lang];
   return (
-    <aside className="my-8 flex flex-col gap-3 border-l-4 border-primary bg-secondary px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+    <aside className="relative my-8 flex flex-col gap-3 border-l-4 border-primary bg-secondary px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <span className="absolute -top-2 right-3 bg-muted px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
+        {t.advertisement}
+      </span>
       <div className="flex items-start gap-3">
         <Trophy className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
         <div>
