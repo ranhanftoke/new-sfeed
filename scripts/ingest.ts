@@ -41,13 +41,17 @@ function buildPrompt(a: Article): string {
 async function generateArticle(a: Article): Promise<string | null> {
   try {
     const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: buildPrompt(a) }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 1500 },
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1500,
+            thinkingConfig: { thinkingBudget: 0 },
+          },
         }),
       },
     );
