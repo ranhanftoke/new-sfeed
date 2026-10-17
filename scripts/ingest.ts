@@ -19,26 +19,78 @@ const GEMINI_KEY = process.env.GEMINI_API_KEY || "";
 const MAX_GENERATE_PER_RUN = 15;
 const GENERATE_DELAY_MS = 7000; // sequential pacing: stays under the free-tier RPM limit
 const LANG_NAMES: Record<string, string> = { en: "English", ar: "Arabic", zh: "Chinese (Simplified)" };
+const SITE_URL = "https://new-sfeed.lovable.app";
 
-function buildPrompt(a: Article): string {
+/** Pick up to 3 related articles (same-language pool) for internal linking. */
+function relatedLinks(a: Article, pool: Article[]): { title: string; url: string }[] {
+  const tags = new Set(a.tags);
+  return pool
+    .filter((b) => b.slug !== a.slug)
+    .map((b) => ({
+      b,
+      score: b.tags.filter((tt) => tags.has(tt)).length * 3 + (b.category === a.category ? 1 : 0),
+    }))
+    .filter((e) => e.score > 0)
+    .sort((x, y) => y.score - x.score)
+    .slice(0, 3)
+    .map((e) => ({ title: e.b.title, url: `${SITE_URL}/${e.b.lang}/articles/${e.b.slug}` }));
+}
+
+function buildPrompt(a: Article, related: { title: string; url: string }[]): string {
   const langName = LANG_NAMES[a.lang] || "English";
+  const relatedBlock =
+    related.length > 0 ? related.map((r) => `- [${r.title}](${r.url})`).join("
+") : "(none)";
   return (
-    `You are a professional news editor writing for "Global Wire", a trilingual news website.\n` +
-    `Write an original, professional news article in ${langName} based ONLY on the facts below.\n` +
-    `Rules:\n` +
-    `- Do NOT invent quotes, names, numbers, dates, places, or events not present in the source material.\n` +
-    `- You may add at most one short paragraph of widely-known background context.\n` +
-    `- Structure: strong lede paragraph, 2-3 short body paragraphs, one closing "why it matters" sentence.\n` +
-    `- Length: 250-350 words. Neutral, journalistic tone. No clickbait, no markdown headings, no bullet lists.\n` +
-    `- Output ONLY the article body text, with paragraphs separated by a blank line.\n\n` +
-    `Headline: ${a.title}\n` +
-    `Source: ${a.source}\n` +
-    `Published: ${a.publishedAt}\n` +
-    `Source excerpt: ${a.summary}`
+    `You are a senior news editor at "Global Wire", a trilingual digital newspaper.
+` +
+    `Write a complete, professional news article in ${langName} that reads as if written by an experienced human journalist - NOT as AI-generated text.
+` +
+    `HARD RULES:
+` +
+    `- Base everything ONLY on the facts in the source material below. NEVER invent quotes, names, figures, dates, places, or events.
+` +
+    `- You may add ONE short paragraph of widely-known background context.
+` +
+    `- Natural human writing: vary sentence length and rhythm, concrete details, direct language.
+` +
+    `- FORBIDDEN AI cliches - never use: "in conclusion", "delve", "moreover", "furthermore", "it's worth noting", "testament to", "landscape", "tapestry", "crucial", "pivotal", "in today's fast-paced world". No emojis. No hype, no clickbait.
+` +
+    `- SEO structure, output in Markdown:
+` +
+    `  - Open with a strong lede paragraph (no heading above it).
+` +
+    `  - Use 2-3 ## subheadings describing each section (natural, keyword-rich).
+` +
+    `  - 400-550 words total. Short paragraphs of 2-4 sentences.
+` +
+    `  - **Bold** key facts sparingly (names, figures, dates).
+` +
+    `  - Naturally weave in 1-2 internal links from RELATED COVERAGE below, using descriptive anchor text (never "click here").
+` +
+    `  - Close with a Sources line: Sources: [${a.source}](${a.link})
+` +
+    `- Output ONLY the Markdown article body. No H1 title (it is provided separately).
+
+` +
+    `HEADLINE: ${a.title}
+` +
+    `ORIGINAL SOURCE: ${a.source}
+` +
+    `PUBLISHED: ${a.publishedAt}
+` +
+    `SOURCE EXCERPT: ${a.summary}
+` +
+    `RELATED COVERAGE ON OUR SITE:
+${relatedBlock}`
   );
 }
 
-async function generateArticle(a: Article, attempt = 1): Promise<string | null> {
+async function generateArticle(
+  a: Article,
+  related: { title: string; url: string }[],
+  attempt = 1,
+): Promise<string | null> {
   try {
     const r = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
@@ -46,10 +98,10 @@ async function generateArticle(a: Article, attempt = 1): Promise<string | null> 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: buildPrompt(a) }] }],
+          contents: [{ parts: [{ text: buildPrompt(a, related) }] }],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 1500,
+            maxOutputTokens: 2000,
             thinkingConfig: { thinkingBudget: 0 },
           },
         }),
@@ -58,7 +110,7 @@ async function generateArticle(a: Article, attempt = 1): Promise<string | null> 
     if (r.status === 429 && attempt === 1) {
       console.error(`gemini 429 for ${a.slug} - waiting 65s and retrying once`);
       await new Promise((res) => setTimeout(res, 65000));
-      return generateArticle(a, 2);
+      return generateArticle(a, related, 2);
     }
     if (!r.ok) {
       console.error(`gemini ${r.status} for ${a.slug}`);
@@ -142,7 +194,8 @@ async function main() {
       const todo = merged.filter((a) => !a.aiArticle).slice(0, MAX_GENERATE_PER_RUN);
       console.log(`[${lang}] generating ${todo.length} AI articles (sequential, paced)`);
       for (const a of todo) {
-        const text = await generateArticle(a);
+        const links = relatedLinks(a, merged);
+        const text = await generateArticle(a, links);
         if (text) {
           a.aiArticle = text;
           a.aiGeneratedAt = new Date().toISOString();
