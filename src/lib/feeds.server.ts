@@ -324,19 +324,52 @@ async function fetchArchived(lang: Lang): Promise<Article[] | null> {
   const cached = dataCache.get(lang);
   if (cached && Date.now() - cached.at < DATA_TTL_MS) return cached.articles;
   const repo = process.env.DATA_REPO || "ranhanftoke/new-sfeed";
+  const save = (arts: Article[]): Article[] | null => {
+    if (arts.length > 0) dataCache.set(lang, { at: Date.now(), articles: arts });
+    return arts.length > 0 ? arts : (cached?.articles ?? null);
+  };
+  // 1) Public path: raw.githubusercontent.com (works when repo is public)
   try {
     const res = await fetch(
       `https://raw.githubusercontent.com/${repo}/data/data/${lang}/latest.json`,
       { headers: { "user-agent": "GlobalWireBot/1.0 (+news aggregator)" } },
     );
-    if (!res.ok) return cached?.articles ?? null;
-    const j = (await res.json()) as { articles?: Article[] };
-    const arts = Array.isArray(j.articles) ? j.articles : [];
-    if (arts.length > 0) dataCache.set(lang, { at: Date.now(), articles: arts });
-    return arts.length > 0 ? arts : (cached?.articles ?? null);
+    if (res.ok) {
+      const j = (await res.json()) as { articles?: Article[] };
+      const r = save(Array.isArray(j.articles) ? j.articles : []);
+      if (r) return r;
+    }
   } catch {
-    return cached?.articles ?? null;
+    // try private-repo fallback below
   }
+  // 2) Private-repo fallback: GitHub API with token (server-side only,
+  //    set GITHUB_DATA_TOKEN env on the host; never expose to the client)
+  const ghToken = process.env.GITHUB_DATA_TOKEN;
+  if (ghToken) {
+    try {
+      const r = await fetch(
+        `https://api.github.com/repos/${repo}/contents/data/${lang}/latest.json?ref=data`,
+        {
+          headers: {
+            Authorization: `Bearer ${ghToken}`,
+            Accept: "application/vnd.github+json",
+            "user-agent": "GlobalWireBot/1.0 (+news aggregator)",
+          },
+        },
+      );
+      if (r.ok) {
+        const j = (await r.json()) as { content?: string };
+        const parsed = JSON.parse(
+          Buffer.from(j.content ?? "", "base64").toString("utf-8"),
+        ) as { articles?: Article[] };
+        const out = save(Array.isArray(parsed.articles) ? parsed.articles : []);
+        if (out) return out;
+      }
+    } catch {
+      // fall through to RSS
+    }
+  }
+  return cached?.articles ?? null;
 }
 
 /**
