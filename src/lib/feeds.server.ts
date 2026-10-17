@@ -313,41 +313,40 @@ export async function ingest(lang: Lang): Promise<Article[]> {
 }
 
 /**
+ * Permanent article archive, stored as JSON on the repo's `data` branch
+ * (written by scripts/ingest.ts via GitHub Actions). 15-minute memory cache.
+ * Repo is configurable via DATA_REPO env ("owner/name").
+ */
+const DATA_TTL_MS = 15 * 60 * 1000;
+const dataCache = new Map<Lang, { at: number; articles: Article[] }>();
+
+async function fetchArchived(lang: Lang): Promise<Article[] | null> {
+  const cached = dataCache.get(lang);
+  if (cached && Date.now() - cached.at < DATA_TTL_MS) return cached.articles;
+  const repo = process.env.DATA_REPO || "ranhanftoke/new-sfeed";
+  try {
+    const res = await fetch(
+      `https://raw.githubusercontent.com/${repo}/data/data/${lang}/latest.json`,
+      { headers: { "user-agent": "GlobalWireBot/1.0 (+news aggregator)" } },
+    );
+    if (!res.ok) return cached?.articles ?? null;
+    const j = (await res.json()) as { articles?: Article[] };
+    const arts = Array.isArray(j.articles) ? j.articles : [];
+    if (arts.length > 0) dataCache.set(lang, { at: Date.now(), articles: arts });
+    return arts.length > 0 ? arts : (cached?.articles ?? null);
+  } catch {
+    return cached?.articles ?? null;
+  }
+}
+
+/**
  * Article store for a language.
- * 1) Postgres archive first (stable URLs, permanent history) when DATABASE_URL is set.
+ * 1) GitHub data-branch archive first (stable URLs, permanent history).
  * 2) Fallback: live RSS + 15-minute in-memory cache (previous behavior).
  */
 export async function getArticles(lang: Lang): Promise<Article[]> {
-  if (process.env.DATABASE_URL) {
-    try {
-      const { getDb } = await import("./db");
-      const { articles } = await import("../../drizzle/schema");
-      const { desc, eq } = await import("drizzle-orm");
-      const rows = await getDb()
-        .select()
-        .from(articles)
-        .where(eq(articles.lang, lang))
-        .orderBy(desc(articles.publishedAt))
-        .limit(600);
-      if (rows.length > 0) {
-        return rows.map((r) => ({
-          slug: r.slug,
-          title: r.title,
-          summary: r.summary ?? "",
-          content: r.content ?? "",
-          link: r.link,
-          source: r.source ?? "",
-          category: (r.category as Category) ?? "world",
-          lang: (r.lang as Lang) ?? lang,
-          publishedAt: r.publishedAt ? r.publishedAt.toISOString() : new Date().toISOString(),
-          image: r.image,
-          tags: r.tags ?? [],
-        }));
-      }
-    } catch {
-      // fall through to live RSS
-    }
-  }
+  const archived = await fetchArchived(lang);
+  if (archived && archived.length > 0) return archived;
 
   const cached = cache.get(lang);
   if (cached && Date.now() - cached.at < TTL_MS) return cached.articles;
