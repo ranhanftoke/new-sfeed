@@ -62,7 +62,7 @@ function buildPrompt(a: Article, related: { title: string; url: string }[]): str
 ` +
     `  - Use 2-3 ## subheadings describing each section (natural, keyword-rich).
 ` +
-    `  - 400-550 words total. Short paragraphs of 2-4 sentences.
+    `  - 400-550 words total - this length is MANDATORY, never write a short summary; an article under 350 words is a failure. 4-6 substantial paragraphs of 2-4 sentences.
 ` +
     `  - **Bold** key facts sparingly (names, figures, dates).
 ` +
