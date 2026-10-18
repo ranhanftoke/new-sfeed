@@ -73,7 +73,7 @@ type Dict = {
 export const T: Record<Lang, Dict> = {
   en: {
     siteName: "Global Wire",
-    tagline: "World news, updated every 15 minutes",
+    tagline: "World news, updated every hour",
     siteDescription:
       "Global Wire aggregates world, technology, business, sports, culture and science headlines from trusted publishers, updated continuously.",
     categories: {
@@ -126,7 +126,7 @@ export const T: Record<Lang, Dict> = {
   },
   ar: {
     siteName: "غلوبال واير",
-    tagline: "أخبار العالم، تُحدَّث كل 15 دقيقة",
+    tagline: "أخبار العالم، تُحدَّث كل ساعة",
     siteDescription:
       "غلوبال واير يجمع أخبار العالم والتقنية والاقتصاد والرياضة والثقافة والعلوم من مصادر موثوقة، مع تحديث مستمر.",
     categories: {
@@ -179,7 +179,7 @@ export const T: Record<Lang, Dict> = {
   },
   zh: {
     siteName: "环球通讯",
-    tagline: "全球新闻，每 15 分钟更新",
+    tagline: "全球新闻，每小时更新",
     siteDescription:
       "环球通讯汇集国际、科技、财经、体育、文化与科学领域的权威媒体头条，持续更新。",
     categories: {
