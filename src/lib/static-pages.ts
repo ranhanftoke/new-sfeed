@@ -15,8 +15,15 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
         {
           heading: "How the technology works",
           body: [
-            "Our ingestion engine polls a curated list of publisher feeds every 15 minutes. Each item is parsed for its title, summary, publication time and source, then de-duplicated so the same story never appears twice.",
-            "Key concepts are extracted from the wording of each item using statistical keyword analysis on our own servers. No external language models are used, which keeps the service fast, private and free of API costs.",
+            "Our ingestion engine polls a curated list of publisher feeds every hour. Each item is parsed for its title, summary, publication time and source, then de-duplicated so the same story never appears twice and permanently archived so stories remain readable after they leave the original feed.",
+            "Key concepts are extracted from the wording of each item using statistical keyword analysis on our own servers. For selected stories we also publish an AI-assisted editorial version: a longer article generated strictly from the facts of the linked source, with no invented quotes, figures or events. Every AI-assisted article carries a visible disclosure badge and a prominent link to the original reporting.",
+          ],
+        },
+        {
+          heading: "Editorial standards",
+          body: [
+            "Every article page adds original context: key topics, related coverage from our archive, and a developing-story flag when the story is less than six hours old.",
+            "We never claim authorship of the underlying reporting. The publisher is always credited by name and linked directly.",
           ],
         },
         {
@@ -55,7 +62,7 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
         {
           heading: "Cookies and advertising",
           body: [
-            "We may display advertising supplied by third-party networks. Those networks, including Google and its partners, may set cookies or use device identifiers to serve and measure ads, including personalised ads where you have consented.",
+            "We may display advertising supplied by third-party networks. Those networks, including Google and its partners, may set cookies or use device identifiers to serve and measure ads, including personalised ads where you have consented. Google's use of advertising cookies enables it and its partners to serve ads to you based on your visit to this and other sites.",
             "You can withdraw or change consent at any time through your browser settings or the consent controls shown to you, and you may opt out of personalised advertising via Google Ads Settings and www.aboutads.info.",
           ],
         },
@@ -108,7 +115,7 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
     editorial: {
       title: "Editorial guidelines & source credits",
       intro:
-        "Global Wire is an aggregator, not a newsroom. We do not write, rewrite or editorialise the reporting we display. These guidelines describe exactly how content reaches this site.",
+        "Global Wire is an aggregator with an editorial context layer. We surface reporting from established newsrooms, add structured context, and for selected stories publish clearly labeled AI-assisted versions. These guidelines describe exactly how content reaches this site.",
       sections: [
         {
           heading: "Attribution",
@@ -129,9 +136,10 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
           ],
         },
         {
-          heading: "No AI-generated reporting",
+          heading: "AI-assisted articles",
           body: [
-            "Categories, tags and related-story links are produced by deterministic keyword analysis. No generative AI writes or alters any headline or summary on this site.",
+            "For selected stories we publish an AI-assisted editorial version alongside the original summary. These articles are generated strictly from the facts of the linked source article: no invented quotes, names, figures or dates. Each one carries a visible disclosure badge and ends with a Sources line linking to the original reporting.",
+            "Headlines, summaries, categories, tags and related-story links remain produced by deterministic analysis on our own servers.",
           ],
         },
       ],
@@ -146,8 +154,15 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
         {
           heading: "كيف تعمل التقنية",
           body: [
-            "يقوم محرك التجميع بقراءة قائمة مختارة من الخلاصات كل 15 دقيقة، ويستخرج العنوان والملخص ووقت النشر والمصدر، ثم يمنع تكرار الخبر نفسه.",
-            "تُستخرج الكلمات المفتاحية إحصائياً على خدماتنا الخاصة دون استخدام أي نماذج ذكاء اصطناعي خارجية، مما يحافظ على السرعة والخصوصية وانعدام تكاليف الواجهات البرمجية.",
+            "يقوم محرك التجميع بقراءة قائمة مختارة من الخلاصات كل ساعة، ويستخرج العنوان والملخص ووقت النشر والمصدر، ثم يمنع تكرار الخبر نفسه ويؤرشفه بشكل دائم ليبقى قابلاً للقراءة بعد مغادرته الخلاصة الأصلية.",
+            "تُستخرج الكلمات المفتاحية إحصائياً على خدماتنا الخاصة. ولبعض الأخبار ننشر نسخة تحريرية بمساعدة الذكاء الاصطناعي: مقال أطول مولّد حصراً من وقائع المصدر المرتبط، دون اختراع اقتباسات أو أرقام أو أحداث. كل مقال من هذا النوع يحمل شارة إفصاح واضحة ورابطاً بارزاً للتقرير الأصلي.",
+          ],
+        },
+        {
+          heading: "معاييرنا التحريرية",
+          body: [
+            "تضيف كل صفحة خبر سياقاً أصلياً: المواضيع الرئيسية، والتغطيات ذات الصلة من أرشيفنا، وعلامة «خبر قيد التطور» عندما يكون الخبر أحدث من ست ساعات.",
+            "لا ننسب إلى أنفسنا التقرير الأصلي أبداً؛ الناشر مذكور بالاسم ومربوط مباشرة دائماً.",
           ],
         },
         {
@@ -186,7 +201,7 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
         {
           heading: "ملفات تعريف الارتباط والإعلانات",
           body: [
-            "قد نعرض إعلانات من شبكات خارجية، وقد تستخدم هذه الشبكات ومن بينها Google وشركاؤها ملفات تعريف الارتباط أو معرّفات الجهاز لعرض الإعلانات وقياسها، بما في ذلك الإعلانات المخصصة عند موافقتك.",
+            "قد نعرض إعلانات من شبكات خارجية، وقد تستخدم هذه الشبكات ومن بينها Google وشركاؤها ملفات تعريف الارتباط أو معرّفات الجهاز لعرض الإعلانات وقياسها، بما في ذلك الإعلانات المخصصة عند موافقتك. ويتيح استخدام Google لملفات تعريف الارتباط الإعلانية لها ولشركائها عرض إعلانات لك بناءً على زيارتك لهذا الموقع ومواقع أخرى.",
             "يمكنك سحب الموافقة أو تعديلها في أي وقت من إعدادات المتصفح أو من أدوات الموافقة، كما يمكنك إلغاء تخصيص الإعلانات عبر إعدادات إعلانات Google وموقع www.aboutads.info.",
           ],
         },
@@ -239,7 +254,7 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
     editorial: {
       title: "السياسة التحريرية وحقوق المصادر",
       intro:
-        "غلوبال واير خدمة تجميع وليست غرفة أخبار. لا نكتب التقارير ولا نعيد صياغتها. توضح هذه السياسة كيف يصل المحتوى إلى الموقع.",
+        "غلوبال واير خدمة تجميع بطبقة سياق تحريرية. نعرض تقارير غرف أخبار معروفة ونضيف سياقاً منظماً، ولبعض الأخبار ننشر نسخاً موسومة بوضوح بمساعدة الذكاء الاصطناعي. توضح هذه السياسة كيف يصل المحتوى إلى الموقع.",
       sections: [
         {
           heading: "النسبة إلى المصدر",
@@ -260,9 +275,10 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
           ],
         },
         {
-          heading: "لا تقارير مولّدة آلياً",
+          heading: "مقالات بمساعدة الذكاء الاصطناعي",
           body: [
-            "التصنيفات والوسوم والأخبار ذات الصلة تُنتج بتحليل كلمات مفتاحية محدد سلفاً، ولا يشارك أي ذكاء اصطناعي توليدي في كتابة أو تعديل العناوين والملخصات.",
+            "لبعض الأخبار ننشر نسخة تحريرية بمساعدة الذكاء الاصطناعي إلى جانب الملخص الأصلي. تُولَّد هذه المقالات حصراً من وقائع المقال المصدر المرتبط: دون اختراع اقتباسات أو أسماء أو أرقام أو تواريخ. يحمل كل مقال شارة إفصاح واضحة وينتهي بسطر «المصادر» الذي يحيل إلى التقرير الأصلي.",
+            "تبقى العناوين والملخصات والتصنيفات والوسوم والأخبار ذات الصلة مُنتَجة بتحليل حتمي على خدماتنا الخاصة.",
           ],
         },
       ],
@@ -277,8 +293,15 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
         {
           heading: "技术如何运作",
           body: [
-            "采集引擎每 15 分钟读取一次精选媒体源，解析标题、摘要、发布时间与来源，并自动去重，避免同一条新闻重复出现。",
-            "关键词由我们自有服务器上的统计分析得出，不调用任何外部大语言模型，因此速度快、隐私好且没有接口费用。",
+            "采集引擎每小时读取一次精选媒体源，解析标题、摘要、发布时间与来源，并自动去重、永久存档，使新闻在离开原订阅源后仍可阅读。",
+            "关键词由我们自有服务器上的统计分析得出。对于部分新闻，我们还会发布 AI 辅助编辑版本：严格依据所链接原文事实生成的长文，不虚构引语、数字或事件。每篇 AI 辅助文章都带有明显的披露标识，并显著链接原文报道。",
+          ],
+        },
+        {
+          heading: "编辑标准",
+          body: [
+            "每篇新闻页都附带原创背景：关键主题、本站存档中的相关报道，以及新闻不足六小时时的“发展中”标记。",
+            "我们从不声称拥有原报道的著作权——出版方始终得到署名与直接链接。",
           ],
         },
         {
@@ -312,7 +335,7 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
         {
           heading: "Cookie 与广告",
           body: [
-            "本站可能展示第三方广告网络提供的广告。包括 Google 及其合作伙伴在内的网络可能使用 Cookie 或设备标识来投放和衡量广告，并在您同意的情况下投放个性化广告。",
+            "本站可能展示第三方广告网络提供的广告。包括 Google 及其合作伙伴在内的网络可能使用 Cookie 或设备标识来投放和衡量广告，并在您同意的情况下投放个性化广告。Google 使用广告 Cookie，可与其合作伙伴根据您对本站及其他网站的访问向您投放广告。",
             "您可随时通过浏览器设置或同意管理工具撤回或更改同意，也可通过 Google 广告设置及 www.aboutads.info 退出个性化广告。",
           ],
         },
@@ -354,7 +377,7 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
     editorial: {
       title: "编辑准则与来源署名",
       intro:
-        "环球通讯是聚合平台而非新闻编辑室。我们不撰写、不改写所展示的报道。以下说明内容进入本站的确切方式。",
+        "环球通讯是带有编辑背景层的聚合平台。我们展示成熟新闻编辑室的报道并添加结构化背景，对部分新闻发布明确标注的 AI 辅助版本。以下说明内容进入本站的确切方式。",
       sections: [
         {
           heading: "署名方式",
@@ -373,8 +396,11 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
           body: ["更正由原出版方负责，其源更新后本站随之更新。通过联系页面提交的移除或更正请求将尽快处理。"],
         },
         {
-          heading: "无 AI 生成报道",
-          body: ["分类、标签与相关报道均由确定性关键词分析生成，本站任何标题或摘要都不由生成式 AI 撰写或修改。"],
+          heading: "AI 辅助文章",
+          body: [
+            "对于部分新闻，我们在原文摘要之外发布 AI 辅助编辑版本。这些文章严格依据所链接原文的事实生成：不虚构引语、姓名、数字或日期。每篇都带有明显的披露标识，并以“来源”行结尾链接原文报道。",
+            "标题、摘要、分类、标签与相关报道仍由我们自有服务器上的确定性分析生成。",
+          ],
         },
       ],
     },
