@@ -96,6 +96,7 @@ async function generateArticle(
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(45000),
         body: JSON.stringify({
           contents: [{ parts: [{ text: buildPrompt(a, related) }] }],
           generationConfig: {
