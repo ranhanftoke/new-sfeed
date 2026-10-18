@@ -16,6 +16,7 @@ const MAX_KEEP = 500;
 
 // AI article generation (Gemini). Gracefully skipped when GEMINI_API_KEY is absent.
 const GEMINI_KEY = process.env.GEMINI_API_KEY || "";
+const GEMINI_MODEL = "gemini-3.5-flash-lite"; // free-tier quota available (2.5-flash capped at 20/day)
 const MAX_GENERATE_PER_RUN = 10;
 const GENERATE_DELAY_MS = 7000; // sequential pacing: stays under the free-tier RPM limit
 const LANG_NAMES: Record<string, string> = { en: "English", ar: "Arabic", zh: "Chinese (Simplified)" };
@@ -92,7 +93,7 @@ async function generateArticle(
 ): Promise<string | null> {
   try {
     const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -102,7 +103,6 @@ async function generateArticle(
           generationConfig: {
             temperature: 0.7,
             maxOutputTokens: 2000,
-            thinkingConfig: { thinkingBudget: 0 },
           },
         }),
       },
@@ -173,42 +173,78 @@ async function writeJson(path: string, articles: Article[], sha?: string) {
 
 async function main() {
   for (const lang of LANGS) {
-    const fresh = await ingest(lang as Lang);
-    const { articles: existing, sha } = await readJson(`data/${lang}/latest.json`);
-    const seen = new Set(existing.map((a) => a.link));
-    // Preserve editorial notes / AI articles already saved on archived articles.
-    const prevByLink = new Map(existing.filter((a) => a.editorial || a.aiArticle).map((a) => [a.link, a]));
-    for (const a of fresh) {
-      const prev = prevByLink.get(a.link);
-      if (!prev) continue;
+    await processLang(lang as Lang);
+  }
+  console.log("ingest done");
+}
+
+/** Merge fresh articles into the archive, preserving saved editorial/AI fields. */
+function mergeAll(fresh: Article[], existing: Article[]): Article[] {
+  const seen = new Set(existing.map((a) => a.link));
+  const prevByLink = new Map(
+    existing.filter((a) => a.editorial || a.aiArticle).map((a) => [a.link, a]),
+  );
+  const aiByLink = new Map(fresh.filter((a) => a.aiArticle).map((a) => [a.link, a]));
+  for (const a of fresh) {
+    const prev = prevByLink.get(a.link);
+    if (prev) {
       if (!a.editorial && prev.editorial) a.editorial = prev.editorial;
       if (!a.aiArticle && prev.aiArticle) {
         a.aiArticle = prev.aiArticle;
         a.aiGeneratedAt = prev.aiGeneratedAt;
       }
     }
-    const merged = [...fresh.filter((a) => !seen.has(a.link)), ...existing]
-      .sort((a, b) => +new Date(b.publishedAt) - +new Date(a.publishedAt))
-      .slice(0, MAX_KEEP);
-    if (GEMINI_KEY) {
-      const todo = merged.filter((a) => !a.aiArticle).slice(0, MAX_GENERATE_PER_RUN);
-      console.log(`[${lang}] generating ${todo.length} AI articles (sequential, paced)`);
-      for (const a of todo) {
-        const links = relatedLinks(a, merged);
-        const text = await generateArticle(a, links);
-        if (text) {
-          a.aiArticle = text;
-          a.aiGeneratedAt = new Date().toISOString();
-        }
-        await new Promise((res) => setTimeout(res, GENERATE_DELAY_MS));
-      }
-    } else {
-      console.log(`[${lang}] GEMINI_API_KEY absent — skipping AI article generation`);
-    }
-    await writeJson(`data/${lang}/latest.json`, merged, sha);
-    console.log(`[${lang}] fresh=${fresh.length} total=${merged.length}`);
   }
-  console.log("ingest done");
+  // If the archive already holds this article but a newer fetch generated an
+  // AI version, carry the generated text onto the archived copy.
+  for (const e of existing) {
+    const g = aiByLink.get(e.link);
+    if (g && !e.aiArticle) {
+      e.aiArticle = g.aiArticle;
+      e.aiGeneratedAt = g.aiGeneratedAt;
+    }
+  }
+  return [...fresh.filter((a) => !seen.has(a.link)), ...existing]
+    .sort((a, b) => +new Date(b.publishedAt) - +new Date(a.publishedAt))
+    .slice(0, MAX_KEEP);
+}
+
+async function processLang(lang: Lang) {
+  const fresh = await ingest(lang);
+  let { articles: existing, sha } = await readJson(`data/${lang}/latest.json`);
+  let merged = mergeAll(fresh, existing);
+
+  if (GEMINI_KEY) {
+    const todo = merged.filter((a) => !a.aiArticle).slice(0, MAX_GENERATE_PER_RUN);
+    console.log(`[${lang}] generating ${todo.length} AI articles (sequential, paced)`);
+    for (const a of todo) {
+      const links = relatedLinks(a, merged);
+      const text = await generateArticle(a, links);
+      if (text) {
+        a.aiArticle = text;
+        a.aiGeneratedAt = new Date().toISOString();
+      }
+      await new Promise((res) => setTimeout(res, GENERATE_DELAY_MS));
+    }
+  } else {
+    console.log(`[${lang}] GEMINI_API_KEY absent — skipping AI article generation`);
+  }
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      await writeJson(`data/${lang}/latest.json`, merged, sha);
+      break;
+    } catch (e) {
+      const msg = (e as Error).message || "";
+      if (attempt === 2 || !msg.includes("409")) throw e;
+      console.log(`[${lang}] write conflict (409), re-reading archive and retrying`);
+      const reread = await readJson(`data/${lang}/latest.json`);
+      existing = reread.articles;
+      sha = reread.sha;
+      merged = mergeAll(fresh, existing);
+    }
+  }
+  console.log(`[${lang}] fresh=${fresh.length} total=${merged.length}`);
 }
 
 main().catch((err) => {
