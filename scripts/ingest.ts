@@ -50,11 +50,19 @@ function buildPrompt(a: Article, related: { title: string; url: string }[]): str
 ` +
     `- Base everything ONLY on the facts in the source material below. NEVER invent quotes, names, figures, dates, places, or events.
 ` +
+    `- ORIGINAL REPORTING STYLE: restructure the story completely in your own words and order. NEVER follow the source excerpt's sentence order or phrasing - a reader comparing both must see a genuinely different article, not a rewrite.
+` +
+    `- ATTRIBUTE every claim to its source ("according to ${a.source}", "the report states"). Never present a single source's claims as independently verified facts.
+` +
     `- You may add ONE short paragraph of widely-known background context.
+` +
+    `- ANALYTICAL DEPTH (what separates real newsrooms from rewriters): include one paragraph on WHY THIS MATTERS - the stakes, who is affected and how - and one short "What to watch" paragraph on likely next developments. Mark analysis clearly as context, never as reported fact.
+` +
+    `- If the source material mentions differing views or disputed claims, present each side fairly with attribution.
 ` +
     `- Natural human writing: vary sentence length and rhythm, concrete details, direct language.
 ` +
-    `- FORBIDDEN AI cliches - never use: "in conclusion", "delve", "moreover", "furthermore", "it's worth noting", "testament to", "landscape", "tapestry", "crucial", "pivotal", "in today's fast-paced world". No emojis. No hype, no clickbait.
+    `- FORBIDDEN AI cliches - never use: "in conclusion", "delve", "moreover", "furthermore", "it's worth noting", "testament to", "landscape", "tapestry", "crucial", "pivotal", "in today's fast-paced world", "game-changer", "in a nutshell", "at the end of the day". No emojis. No hype, no clickbait.
 ` +
     `- SEO structure, output in Markdown:
 ` +
