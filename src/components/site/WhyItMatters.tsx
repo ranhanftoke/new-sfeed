@@ -62,7 +62,7 @@ export function WhyItMatters({
         {points.map((point, i) => (
           <li key={i} className="flex gap-2 text-sm text-muted-foreground">
             <span aria-hidden="true" className="text-primary">
-              \u2022
+              •
             </span>
             <span>{point}</span>
           </li>
