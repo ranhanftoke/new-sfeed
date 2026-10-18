@@ -16,7 +16,7 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
           heading: "How the technology works",
           body: [
             "Our ingestion engine polls a curated list of publisher feeds every hour. Each item is parsed for its title, summary, publication time and source, then de-duplicated so the same story never appears twice and permanently archived so stories remain readable after they leave the original feed.",
-            "Key concepts are extracted from the wording of each item using statistical keyword analysis on our own servers. For selected stories we also publish an AI-assisted editorial version: a longer article generated strictly from the facts of the linked source, with no invented quotes, figures or events. Every AI-assisted article carries a visible disclosure badge and a prominent link to the original reporting.",
+            "Key concepts are extracted from the wording of each item using statistical keyword analysis on our own servers, which keeps the service fast and private.",
           ],
         },
         {
@@ -115,7 +115,7 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
     editorial: {
       title: "Editorial guidelines & source credits",
       intro:
-        "Global Wire is an aggregator with an editorial context layer. We surface reporting from established newsrooms, add structured context, and for selected stories publish clearly labeled AI-assisted versions. These guidelines describe exactly how content reaches this site.",
+        "Global Wire is an aggregator with an editorial context layer. We surface reporting from established newsrooms and add structured context such as key topics and related coverage. These guidelines describe exactly how content reaches this site.",
       sections: [
         {
           heading: "Attribution",
@@ -135,13 +135,6 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
             "Corrections are the responsibility of the originating publisher; once their feed updates, our copy follows. Removal or correction requests sent through our contact page are actioned as quickly as possible.",
           ],
         },
-        {
-          heading: "AI-assisted articles",
-          body: [
-            "For selected stories we publish an AI-assisted editorial version alongside the original summary. These articles are generated strictly from the facts of the linked source article: no invented quotes, names, figures or dates. Each one carries a visible disclosure badge and ends with a Sources line linking to the original reporting.",
-            "Headlines, summaries, categories, tags and related-story links remain produced by deterministic analysis on our own servers.",
-          ],
-        },
       ],
     },
   },
@@ -155,7 +148,7 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
           heading: "كيف تعمل التقنية",
           body: [
             "يقوم محرك التجميع بقراءة قائمة مختارة من الخلاصات كل ساعة، ويستخرج العنوان والملخص ووقت النشر والمصدر، ثم يمنع تكرار الخبر نفسه ويؤرشفه بشكل دائم ليبقى قابلاً للقراءة بعد مغادرته الخلاصة الأصلية.",
-            "تُستخرج الكلمات المفتاحية إحصائياً على خدماتنا الخاصة. ولبعض الأخبار ننشر نسخة تحريرية بمساعدة الذكاء الاصطناعي: مقال أطول مولّد حصراً من وقائع المصدر المرتبط، دون اختراع اقتباسات أو أرقام أو أحداث. كل مقال من هذا النوع يحمل شارة إفصاح واضحة ورابطاً بارزاً للتقرير الأصلي.",
+            "تُستخرج الكلمات المفتاحية إحصائياً على خدماتنا الخاصة، مما يحافظ على السرعة والخصوصية.",
           ],
         },
         {
@@ -254,7 +247,7 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
     editorial: {
       title: "السياسة التحريرية وحقوق المصادر",
       intro:
-        "غلوبال واير خدمة تجميع بطبقة سياق تحريرية. نعرض تقارير غرف أخبار معروفة ونضيف سياقاً منظماً، ولبعض الأخبار ننشر نسخاً موسومة بوضوح بمساعدة الذكاء الاصطناعي. توضح هذه السياسة كيف يصل المحتوى إلى الموقع.",
+        "غلوبال واير خدمة تجميع بطبقة سياق تحريرية. نعرض تقارير غرف أخبار معروفة ونضيف سياقاً منظماً كالمواضيع الرئيسية والتغطيات ذات الصلة. توضح هذه السياسة كيف يصل المحتوى إلى الموقع.",
       sections: [
         {
           heading: "النسبة إلى المصدر",
@@ -274,13 +267,6 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
             "التصحيح مسؤولية الناشر الأصلي، وبمجرد تحديث خلاصته تتحدث نسختنا. وتُنفَّذ طلبات الإزالة أو التصحيح الواردة عبر صفحة الاتصال بأسرع وقت.",
           ],
         },
-        {
-          heading: "مقالات بمساعدة الذكاء الاصطناعي",
-          body: [
-            "لبعض الأخبار ننشر نسخة تحريرية بمساعدة الذكاء الاصطناعي إلى جانب الملخص الأصلي. تُولَّد هذه المقالات حصراً من وقائع المقال المصدر المرتبط: دون اختراع اقتباسات أو أسماء أو أرقام أو تواريخ. يحمل كل مقال شارة إفصاح واضحة وينتهي بسطر «المصادر» الذي يحيل إلى التقرير الأصلي.",
-            "تبقى العناوين والملخصات والتصنيفات والوسوم والأخبار ذات الصلة مُنتَجة بتحليل حتمي على خدماتنا الخاصة.",
-          ],
-        },
       ],
     },
   },
@@ -294,7 +280,7 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
           heading: "技术如何运作",
           body: [
             "采集引擎每小时读取一次精选媒体源，解析标题、摘要、发布时间与来源，并自动去重、永久存档，使新闻在离开原订阅源后仍可阅读。",
-            "关键词由我们自有服务器上的统计分析得出。对于部分新闻，我们还会发布 AI 辅助编辑版本：严格依据所链接原文事实生成的长文，不虚构引语、数字或事件。每篇 AI 辅助文章都带有明显的披露标识，并显著链接原文报道。",
+            "关键词由我们自有服务器上的统计分析得出，因此速度快、隐私好。",
           ],
         },
         {
@@ -377,7 +363,7 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
     editorial: {
       title: "编辑准则与来源署名",
       intro:
-        "环球通讯是带有编辑背景层的聚合平台。我们展示成熟新闻编辑室的报道并添加结构化背景，对部分新闻发布明确标注的 AI 辅助版本。以下说明内容进入本站的确切方式。",
+        "环球通讯是带有编辑背景层的聚合平台。我们展示成熟新闻编辑室的报道并添加结构化背景，如关键主题与相关报道。以下说明内容进入本站的确切方式。",
       sections: [
         {
           heading: "署名方式",
@@ -394,13 +380,6 @@ export const PAGES: Record<Lang, Record<PageKey, PageContent>> = {
         {
           heading: "更正与移除",
           body: ["更正由原出版方负责，其源更新后本站随之更新。通过联系页面提交的移除或更正请求将尽快处理。"],
-        },
-        {
-          heading: "AI 辅助文章",
-          body: [
-            "对于部分新闻，我们在原文摘要之外发布 AI 辅助编辑版本。这些文章严格依据所链接原文的事实生成：不虚构引语、姓名、数字或日期。每篇都带有明显的披露标识，并以“来源”行结尾链接原文报道。",
-            "标题、摘要、分类、标签与相关报道仍由我们自有服务器上的确定性分析生成。",
-          ],
         },
       ],
     },

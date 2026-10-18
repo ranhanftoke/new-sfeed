@@ -140,8 +140,7 @@ function ArticlePage() {
 
         {article.aiArticle ? (
           <>
-            <p className="eyebrow mt-6 text-primary">✨ {L.aiBadge}</p>
-            <div className="article-body mt-3">
+            <div className="article-body mt-6">
               <ReactMarkdown components={mdComponents}>{article.aiArticle}</ReactMarkdown>
             </div>
           </>
@@ -292,8 +291,8 @@ const mdComponents: Components = {
   li: ({ node, ...props }) => <li className="leading-relaxed" {...props} />,
 };
 
-const LABELS: Record<Lang, { alsoRead: string; mostRead: string; aiBadge: string }> = {
-  en: { alsoRead: "Also read", mostRead: "Most read", aiBadge: "AI-assisted editorial version" },
-  ar: { alsoRead: "اقرأ أيضاً", mostRead: "الأكثر قراءة", aiBadge: "نسخة تحريرية بمساعدة الذكاء الاصطناعي" },
-  zh: { alsoRead: "延伸阅读", mostRead: "热门阅读", aiBadge: "AI 辅助编辑版本" },
+const LABELS: Record<Lang, { alsoRead: string; mostRead: string }> = {
+  en: { alsoRead: "Also read", mostRead: "Most read" },
+  ar: { alsoRead: "اقرأ أيضاً", mostRead: "الأكثر قراءة" },
+  zh: { alsoRead: "延伸阅读", mostRead: "热门阅读" },
 };
