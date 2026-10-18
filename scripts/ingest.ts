@@ -16,7 +16,7 @@ const MAX_KEEP = 500;
 
 // AI article generation (Gemini). Gracefully skipped when GEMINI_API_KEY is absent.
 const GEMINI_KEY = process.env.GEMINI_API_KEY || "";
-const MAX_GENERATE_PER_RUN = 15;
+const MAX_GENERATE_PER_RUN = 10;
 const GENERATE_DELAY_MS = 7000; // sequential pacing: stays under the free-tier RPM limit
 const LANG_NAMES: Record<string, string> = { en: "English", ar: "Arabic", zh: "Chinese (Simplified)" };
 const SITE_URL = "https://new-sfeed.lovable.app";
