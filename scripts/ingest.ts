@@ -39,8 +39,7 @@ function relatedLinks(a: Article, pool: Article[]): { title: string; url: string
 function buildPrompt(a: Article, related: { title: string; url: string }[]): string {
   const langName = LANG_NAMES[a.lang] || "English";
   const relatedBlock =
-    related.length > 0 ? related.map((r) => `- [${r.title}](${r.url})`).join("
-") : "(none)";
+    related.length > 0 ? related.map((r) => `- [${r.title}](${r.url})`).join("\n") : "(none)";
   return (
     `You are a senior news editor at "Global Wire", a trilingual digital newspaper.
 ` +
