@@ -4,6 +4,7 @@ import { AdSlot } from "@/components/site/AdSlot";
 import { ArticleCard } from "@/components/site/ArticleCard";
 import { GlobalScoreCallout } from "@/components/site/GlobalScoreCallout";
 import { WhyItMatters } from "@/components/site/WhyItMatters";
+import ReactMarkdown, { type Components } from "react-markdown";
 import { T, formatDate, isLang, type Lang } from "@/lib/i18n";
 import { getArticleData } from "@/lib/news.functions";
 
@@ -80,8 +81,7 @@ function ArticlePage() {
   const { article, related, inline, popular, isDeveloping } = Route.useLoaderData();
   const L = LABELS[lang];
 
-  const bodyText = article.aiArticle ?? article.content;
-  const paragraphs = bodyText
+  const paragraphs = article.content
     .split(/(?<=[.!?。！؟])\s+/)
     .reduce<string[]>((acc, sentence) => {
       const last = acc[acc.length - 1];
@@ -139,9 +139,14 @@ function ArticlePage() {
         ) : null}
 
         {article.aiArticle ? (
-          <p className="eyebrow mt-6 text-primary">✨ {L.aiBadge}</p>
-        ) : null}
-        <div className={`article-body ${article.aiArticle ? "mt-3" : "mt-6"} space-y-4">
+          <>
+            <p className="eyebrow mt-6 text-primary">✨ {L.aiBadge}</p>
+            <div className="article-body mt-3">
+              <ReactMarkdown components={mdComponents}>{article.aiArticle}</ReactMarkdown>
+            </div>
+          </>
+        ) : (
+          <div className="article-body mt-6 space-y-4">
           {paragraphs.map((paragraph, i) => {
             const linkIdx = i === 0 ? 0 : i === 2 ? 1 : -1;
             const rec = linkIdx >= 0 ? inline[linkIdx] : undefined;
@@ -176,7 +181,8 @@ function ArticlePage() {
                 </Link>
               </p>
             ))}
-        </div>
+          </div>
+        )}
 
         {article.category === "sports" ? <GlobalScoreCallout lang={lang} /> : null}
 
@@ -255,6 +261,36 @@ function ArticlePage() {
     </div>
   );
 }
+
+const mdComponents: Components = {
+  h2: ({ node, ...props }) => (
+    <h2 className="mt-8 font-display text-xl font-bold text-foreground" {...props} />
+  ),
+  p: ({ node, ...props }) => (
+    <p className="mt-4 leading-relaxed text-foreground/90" {...props} />
+  ),
+  a: ({ node, href, ...props }) => {
+    const external = href?.startsWith("http");
+    return (
+      <a
+        href={href}
+        {...(external ? { target: "_blank", rel: "nofollow noopener noreferrer" } : {})}
+        className="font-medium text-primary underline underline-offset-4 hover:no-underline"
+        {...props}
+      />
+    );
+  },
+  strong: ({ node, ...props }) => (
+    <strong className="font-semibold text-foreground" {...props} />
+  ),
+  ul: ({ node, ...props }) => (
+    <ul className="mt-4 list-disc space-y-2 ps-5 text-foreground/90" {...props} />
+  ),
+  ol: ({ node, ...props }) => (
+    <ol className="mt-4 list-decimal space-y-2 ps-5 text-foreground/90" {...props} />
+  ),
+  li: ({ node, ...props }) => <li className="leading-relaxed" {...props} />,
+};
 
 const LABELS: Record<Lang, { alsoRead: string; mostRead: string; aiBadge: string }> = {
   en: { alsoRead: "Also read", mostRead: "Most read", aiBadge: "AI-assisted editorial version" },
