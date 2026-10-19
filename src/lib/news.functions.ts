@@ -71,10 +71,10 @@ export const getArticleData = createServerFn({ method: "GET" })
     slug: String(input?.slug ?? "").slice(0, 200),
   }))
   .handler(async ({ data }): Promise<ArticlePageData | null> => {
-    const { getArticles } = await import("./feeds.server");
-    const all = await getArticles(data.lang);
-    const article = all.find((a) => a.slug === data.slug);
+    const { getArticleBySlug, getArticles } = await import("./feeds.server");
+    const article = await getArticleBySlug(data.lang, data.slug);
     if (!article) return null;
+    const all = await getArticles(data.lang);
 
     const tags = new Set(article.tags);
     const scored = all
