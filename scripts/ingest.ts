@@ -143,7 +143,8 @@ if (!token || !repo) {
 
 // Permanent per-article archive: one JSON file per article, never deleted,
 // so article URLs stay alive forever (latest.json keeps only the newest 500).
-const BACKFILL_PER_RUN = 40; // oldest articles re-saved each run until all covered
+const BACKFILL_PER_RUN = 20; // oldest articles re-saved each run until all covered
+const WRITE_BATCH = 8; // parallel article-file writes per batch
 
 async function writeArticleFile(lang: Lang, a: Article) {
   const path = `data/${lang}/articles/${a.slug}.json`;
@@ -299,12 +300,17 @@ async function processLang(lang: Lang) {
     (a) => changedLinks.has(a.link) || tail.some((t) => t.link === a.link),
   );
   console.log(`[${lang}] writing ${toWrite.length} permanent article files`);
-  for (const a of toWrite) {
-    try {
-      await writeArticleFile(lang, a);
-    } catch (e) {
-      console.error(`[${lang}] article file failed for ${a.slug}:`, (e as Error).message);
-    }
+  for (let i = 0; i < toWrite.length; i += WRITE_BATCH) {
+    const batch = toWrite.slice(i, i + WRITE_BATCH);
+    await Promise.all(
+      batch.map(async (a) => {
+        try {
+          await writeArticleFile(lang, a);
+        } catch (e) {
+          console.error(`[${lang}] article file failed for ${a.slug}:`, (e as Error).message);
+        }
+      }),
+    );
   }
 
   console.log(`[${lang}] fresh=${fresh.length} total=${merged.length}`);
