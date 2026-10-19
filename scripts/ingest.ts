@@ -141,6 +141,38 @@ if (!token || !repo) {
   process.exit(1);
 }
 
+// Permanent per-article archive: one JSON file per article, never deleted,
+// so article URLs stay alive forever (latest.json keeps only the newest 500).
+const BACKFILL_PER_RUN = 40; // oldest articles re-saved each run until all covered
+
+async function writeArticleFile(lang: Lang, a: Article) {
+  const path = `data/${lang}/articles/${a.slug}.json`;
+  const body = JSON.stringify({ updatedAt: new Date().toISOString(), article: a });
+  const put = (sha?: string) =>
+    fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+      method: "PUT",
+      headers: H,
+      body: JSON.stringify({
+        message: `ingest: ${path}`,
+        content: Buffer.from(body, "utf-8").toString("base64"),
+        branch: "data",
+        ...(sha ? { sha } : {}),
+      }),
+    });
+  let r = await put();
+  if (r.status === 422) {
+    // file already exists (e.g. AI text generated after first save) — update it
+    const info = await fetch(
+      `https://api.github.com/repos/${repo}/contents/${path}?ref=data`,
+      { headers: H },
+    );
+    const j = info.ok ? ((await info.json()) as { sha?: string }) : {};
+    if (!j.sha) throw new Error(`write ${path}: 422 and no existing sha`);
+    r = await put(j.sha);
+  }
+  if (!r.ok) throw new Error(`write ${path}: ${r.status} ${(await r.text()).slice(0, 200)}`);
+}
+
 const H: Record<string, string> = {
   Authorization: `Bearer ${token}`,
   Accept: "application/vnd.github+json",
@@ -252,6 +284,29 @@ async function processLang(lang: Lang) {
       merged = mergeAll(fresh, existing);
     }
   }
+
+  // Permanent per-article files: new/updated articles now, plus the oldest
+  // ones each run (backfill) so nothing is lost when it leaves latest.json.
+  const prevLinks = new Set(existing.map((a) => a.link));
+  const prevAi = new Set(existing.filter((a) => a.aiArticle).map((a) => a.link));
+  const changedLinks = new Set(
+    merged
+      .filter((a) => !prevLinks.has(a.link) || (a.aiArticle && !prevAi.has(a.link)))
+      .map((a) => a.link),
+  );
+  const tail = merged.slice(-BACKFILL_PER_RUN).filter((a) => !changedLinks.has(a.link));
+  const toWrite = merged.filter(
+    (a) => changedLinks.has(a.link) || tail.some((t) => t.link === a.link),
+  );
+  console.log(`[${lang}] writing ${toWrite.length} permanent article files`);
+  for (const a of toWrite) {
+    try {
+      await writeArticleFile(lang, a);
+    } catch (e) {
+      console.error(`[${lang}] article file failed for ${a.slug}:`, (e as Error).message);
+    }
+  }
+
   console.log(`[${lang}] fresh=${fresh.length} total=${merged.length}`);
 }
 
