@@ -410,3 +410,43 @@ export async function getArticles(lang: Lang): Promise<Article[]> {
   inflight.set(lang, job);
   return job;
 }
+
+/**
+ * Permanent single-article lookup.
+ * latest.json keeps only the newest 500; older articles live forever as
+ * individual files at data/{lang}/articles/{slug}.json on the data branch.
+ */
+const articleFileCache = new Map<string, { at: number; article: Article | null }>();
+const ARTICLE_FILE_TTL_MS = 60 * 60 * 1000; // 1h — archived articles are immutable
+
+async function fetchArchivedArticleFile(lang: Lang, slug: string): Promise<Article | null> {
+  const key = `${lang}/${slug}`;
+  const cached = articleFileCache.get(key);
+  if (cached && Date.now() - cached.at < ARTICLE_FILE_TTL_MS) return cached.article;
+  const repo = process.env.DATA_REPO || "ranhanftoke/new-sfeed";
+  try {
+    const res = await fetch(
+      `https://raw.githubusercontent.com/${repo}/data/data/${lang}/articles/${encodeURIComponent(slug)}.json`,
+      { headers: { "user-agent": "GlobalWireBot/1.0 (+news aggregator)" } },
+    );
+    if (res.ok) {
+      const j = (await res.json()) as { article?: Article };
+      if (j.article && j.article.slug === slug) {
+        articleFileCache.set(key, { at: Date.now(), article: j.article });
+        return j.article;
+      }
+    }
+  } catch {
+    // not found — cache the miss briefly to avoid hammering
+  }
+  articleFileCache.set(key, { at: Date.now(), article: null });
+  return null;
+}
+
+/** Find one article by slug: latest.json first, then the permanent archive file. */
+export async function getArticleBySlug(lang: Lang, slug: string): Promise<Article | null> {
+  const all = await getArticles(lang);
+  const hit = all.find((a) => a.slug === slug);
+  if (hit) return hit;
+  return fetchArchivedArticleFile(lang, slug);
+}
