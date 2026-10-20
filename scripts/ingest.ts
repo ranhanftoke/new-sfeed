@@ -187,29 +187,75 @@ async function readJson(path: string): Promise<{ articles: Article[]; sha?: stri
   if (r.status === 404) return { articles: [] };
   if (!r.ok) throw new Error(`read ${path}: ${r.status}`);
   const j = (await r.json()) as { content?: string; sha?: string };
-  const raw = Buffer.from(j.content ?? "", "base64").toString("utf-8");
+  let raw: string;
+  if (j.content) {
+    raw = Buffer.from(j.content, "base64").toString("utf-8");
+  } else if (j.sha) {
+    // Contents API returns EMPTY content for files > 1MB — use the Blobs API.
+    const br = await fetch(`https://api.github.com/repos/${repo}/git/blobs/${j.sha}`, {
+      headers: H,
+    });
+    if (!br.ok) throw new Error(`read ${path} blob: ${br.status}`);
+    const bj = (await br.json()) as { content?: string };
+    raw = Buffer.from(bj.content ?? "", "base64").toString("utf-8");
+  } else {
+    return { articles: [], sha: j.sha };
+  }
   const parsed = JSON.parse(raw) as { articles?: Article[] };
   return { articles: Array.isArray(parsed.articles) ? parsed.articles : [], sha: j.sha };
 }
 
-async function writeJson(path: string, articles: Article[], sha?: string) {
+async function writeJson(path: string, articles: Article[], _sha?: string) {
   const body = JSON.stringify({
     updatedAt: new Date().toISOString(),
     count: articles.length,
     articles,
   });
-  const payload: Record<string, unknown> = {
-    message: `ingest: ${path} (${articles.length} articles)`,
-    content: Buffer.from(body, "utf-8").toString("base64"),
-    branch: "data",
-  };
-  if (sha) payload.sha = sha;
-  const r = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
-    method: "PUT",
+  // Git API write (blob → tree → commit → ref): no 1MB Contents-API limit.
+  const api = `https://api.github.com/repos/${repo}`;
+  const refRes = await fetch(`${api}/git/ref/heads/data`, { headers: H });
+  if (!refRes.ok) throw new Error(`write ${path}: ref ${refRes.status}`);
+  const headSha = ((await refRes.json()) as { object: { sha: string } }).object.sha;
+  const commitRes = await fetch(`${api}/git/commits/${headSha}`, { headers: H });
+  if (!commitRes.ok) throw new Error(`write ${path}: head commit ${commitRes.status}`);
+  const baseTree = ((await commitRes.json()) as { tree: { sha: string } }).tree.sha;
+  const blobRes = await fetch(`${api}/git/blobs`, {
+    method: "POST",
     headers: H,
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      content: Buffer.from(body, "utf-8").toString("base64"),
+      encoding: "base64",
+    }),
   });
-  if (!r.ok) throw new Error(`write ${path}: ${r.status} ${(await r.text()).slice(0, 200)}`);
+  if (!blobRes.ok) throw new Error(`write ${path}: blob ${blobRes.status}`);
+  const blobSha = ((await blobRes.json()) as { sha: string }).sha;
+  const treeRes = await fetch(`${api}/git/trees`, {
+    method: "POST",
+    headers: H,
+    body: JSON.stringify({
+      base_tree: baseTree,
+      tree: [{ path, mode: "100644", type: "blob", sha: blobSha }],
+    }),
+  });
+  if (!treeRes.ok) throw new Error(`write ${path}: tree ${treeRes.status}`);
+  const treeSha = ((await treeRes.json()) as { sha: string }).sha;
+  const newCommitRes = await fetch(`${api}/git/commits`, {
+    method: "POST",
+    headers: H,
+    body: JSON.stringify({
+      message: `ingest: ${path} (${articles.length} articles)`,
+      tree: treeSha,
+      parents: [headSha],
+    }),
+  });
+  if (!newCommitRes.ok) throw new Error(`write ${path}: commit ${newCommitRes.status}`);
+  const newCommitSha = ((await newCommitRes.json()) as { sha: string }).sha;
+  const updRes = await fetch(`${api}/git/refs/heads/data`, {
+    method: "PATCH",
+    headers: H,
+    body: JSON.stringify({ sha: newCommitSha, force: false }),
+  });
+  if (!updRes.ok) throw new Error(`write ${path}: 409 ref update ${updRes.status}`);
 }
 
 async function main() {
