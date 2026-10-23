@@ -9,7 +9,7 @@ name: ingest-news
 # which exceeds the free quota unless the repo is public.)
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "23 * * * *"
   workflow_dispatch: {}
 
 jobs:
