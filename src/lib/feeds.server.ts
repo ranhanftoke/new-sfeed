@@ -2,6 +2,7 @@ import { XMLParser } from "fast-xml-parser";
 
 import { CATEGORIES, type Category, type Lang } from "./i18n";
 import type { Article } from "./news-types";
+import editorialJson from "../data/editorial.json";
 
 /** Public RSS/Atom sources per language and category. Failures are tolerated. */
 export const FEEDS: Record<Lang, Record<Category, string[]>> = {
@@ -389,9 +390,46 @@ async function fetchArchived(lang: Lang): Promise<Article[] | null> {
  * 1) GitHub data-branch archive first (stable URLs, permanent history).
  * 2) Fallback: live RSS + 15-minute in-memory cache (previous behavior).
  */
+/** Original editorial articles (src/data/editorial.json on main). They are
+ *  merged at read time and never touched by the ingestion workflow, so a
+ *  fresh ingest can never overwrite or delete them. The file lives on main
+ *  (not the data branch) so it deploys with the site; bundled copy is the
+ *  offline fallback. */
+const EDITORIAL_FALLBACK = editorialJson as Article[];
+const editorialCache = new Map<Lang, { at: number; articles: Article[] }>();
+
+async function getEditorial(lang: Lang): Promise<Article[]> {
+  const cached = editorialCache.get(lang);
+  if (cached && Date.now() - cached.at < DATA_TTL_MS) return cached.articles;
+  const repo = process.env.DATA_REPO || "ranhanftoke/new-sfeed";
+  try {
+    const res = await fetch(
+      `https://raw.githubusercontent.com/${repo}/main/src/data/editorial.json`,
+      { headers: { "user-agent": "GlobalWireBot/1.0 (+news aggregator)" } },
+    );
+    if (res.ok) {
+      const j = (await res.json()) as Article[];
+      if (Array.isArray(j) && j.length > 0) {
+        const rows = j.filter((a) => a.lang === lang);
+        editorialCache.set(lang, { at: Date.now(), articles: rows });
+        return rows;
+      }
+    }
+  } catch {
+    // fall through to bundled fallback
+  }
+  return EDITORIAL_FALLBACK.filter((a) => a.lang === lang);
+}
+
+function mergeEditorial(rows: Article[], editorial: Article[]): Article[] {
+  const seen = new Set(rows.map((a) => a.slug));
+  return [...rows, ...editorial.filter((a) => !seen.has(a.slug))];
+}
+
 export async function getArticles(lang: Lang): Promise<Article[]> {
+  const editorial = await getEditorial(lang);
   const archived = await fetchArchived(lang);
-  if (archived && archived.length > 0) return archived;
+  if (archived && archived.length > 0) return mergeEditorial(archived, editorial);
 
   const cached = cache.get(lang);
   if (cached && Date.now() - cached.at < TTL_MS) return cached.articles;
@@ -408,7 +446,8 @@ export async function getArticles(lang: Lang): Promise<Article[]> {
     .finally(() => inflight.delete(lang));
 
   inflight.set(lang, job);
-  return job;
+  const base = await job;
+  return mergeEditorial(base, editorial);
 }
 
 /**

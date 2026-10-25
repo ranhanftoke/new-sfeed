@@ -16,6 +16,8 @@ export type Article = {
   editorial?: string | null;
   /** AI-generated professional article body (null until generated). */
   aiArticle?: string | null;
+  /** True for original editorial articles (site's own content, not aggregation). */
+  isEditorial?: boolean;
   /** ISO timestamp of when aiArticle was generated. */
   aiGeneratedAt?: string | null;
 };
