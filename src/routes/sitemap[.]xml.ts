@@ -33,7 +33,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           const articles = await getArticles(lang);
           for (const article of articles.slice(0, 500)) {
             urls.push(
-              `<url><loc>${escapeXml(`${origin}/${lang}/articles/${article.slug}`)}</loc><lastmod>${article.publishedAt}</lastmod><changefreq>hourly</changefreq><priority>0.7</priority></url>`,
+              `<url><loc>${escapeXml(encodeURI(`${origin}/${lang}/articles/${article.slug}`))}</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>`,
             );
           }
         }

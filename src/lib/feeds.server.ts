@@ -2,7 +2,6 @@ import { XMLParser } from "fast-xml-parser";
 
 import { CATEGORIES, type Category, type Lang } from "./i18n";
 import type { Article } from "./news-types";
-import editorialJson from "../data/editorial.json";
 
 /** Public RSS/Atom sources per language and category. Failures are tolerated. */
 export const FEEDS: Record<Lang, Record<Category, string[]>> = {
@@ -82,7 +81,7 @@ const STOPWORDS = new Set(
   (
     "the a an and or of to in on for with from by at as is are was were be been will would could should " +
     "this that these those it its his her their our your my not no but if then than so such about after " +
-    "before over under more most new says say said who what when where why how first two three you we they have has had having win wins won winning beat beats " +
+    "before over under more most new says say said who what when where why how first two three you we they " +
     "من في على عن الى إلى مع هذا هذه ذلك التي الذي كان كانت يكون بعد قبل بين خلال حول أن إن ما لا هو هي هم " +
     "كل قد لكن أو ثم عند لدى منذ حتى ضد نحو أمام دون سوف كما وقد وقال قال أكثر أول"
   ).split(/\s+/),
@@ -101,18 +100,6 @@ function stripHtml(input: string): string {
     .replace(/&gt;/g, ">")
     .replace(/\s+/g, " ")
     .trim();
-}
-
-/**
- * Truncate at a word boundary with an ellipsis. CJK text (no spaces) is cut
- * directly. Never leaves a mid-word cut like "the promising yo".
- */
-function smartTruncate(text: string, max: number): string {
-  if (text.length <= max) return text;
-  const cut = text.slice(0, max);
-  const lastSpace = cut.lastIndexOf(" ");
-  const at = lastSpace > max * 0.4 ? lastSpace : max;
-  return cut.slice(0, at).trimEnd() + "\u2026";
 }
 
 function hash(input: string): string {
@@ -152,7 +139,7 @@ export function extractTags(title: string, summary: string): string[] {
 
   for (const raw of text.split(/[^\p{L}\p{N}]+/u)) {
     const word = raw.trim();
-    if (word.length < 4) continue; // skip stubs like #cup / #win
+    if (word.length < 3) continue;
     const lower = word.toLowerCase();
     if (STOPWORDS.has(lower)) continue;
     if (/^[\u4e00-\u9fff]+$/.test(word)) continue;
@@ -236,14 +223,17 @@ function linkOf(item: Record<string, unknown>): string {
   return text(item["guid"]) || text(item["id"]);
 }
 
-function dateOf(item: Record<string, unknown>): string {
+function dateOf(item: Record<string, unknown>): { publishedAt: string; estimated: boolean } {
   const raw =
     text(item["pubDate"]) ||
     text(item["published"]) ||
     text(item["updated"]) ||
     text(item["dc:date"]);
-  const parsed = raw ? new Date(raw) : new Date();
-  return (Number.isNaN(parsed.getTime()) ? new Date() : parsed).toISOString();
+  const parsed = raw ? new Date(raw) : null;
+  if (!parsed || Number.isNaN(parsed.getTime())) {
+    return { publishedAt: new Date().toISOString(), estimated: true };
+  }
+  return { publishedAt: parsed.toISOString(), estimated: false };
 }
 
 async function fetchFeed(url: string, lang: Lang, category: Category): Promise<Article[]> {
@@ -273,7 +263,8 @@ async function fetchFeed(url: string, lang: Lang, category: Category): Promise<A
         text(item["description"]) ||
         text(item["summary"]);
       const body = stripHtml(rawBody);
-      const summary = smartTruncate(body, 260);
+      const summary = body.slice(0, 260);
+      const publicationDate = dateOf(item);
       articles.push({
         slug: slugify(title, link),
         title,
@@ -283,7 +274,8 @@ async function fetchFeed(url: string, lang: Lang, category: Category): Promise<A
         source: sourceName,
         category,
         lang,
-        publishedAt: dateOf(item),
+        publishedAt: publicationDate.publishedAt,
+        publishedAtEstimated: publicationDate.estimated,
         image: firstImage(item, rawBody),
         tags: extractTags(title, body),
       });
@@ -301,7 +293,7 @@ type CacheEntry = { at: number; articles: Article[] };
 const cache = new Map<Lang, CacheEntry>();
 const inflight = new Map<Lang, Promise<Article[]>>();
 
-export async function ingest(lang: Lang): Promise<Article[]> {
+async function ingest(lang: Lang): Promise<Article[]> {
   // Specific categories win over the broad "world" wires when an item appears
   // in both, so category pages are never starved by a general feed.
   const ordered = [...CATEGORIES].sort((a, b) =>
@@ -325,112 +317,8 @@ export async function ingest(lang: Lang): Promise<Article[]> {
   );
 }
 
-/**
- * Permanent article archive, stored as JSON on the repo's `data` branch
- * (written by scripts/ingest.ts via GitHub Actions). 15-minute memory cache.
- * Repo is configurable via DATA_REPO env ("owner/name").
- */
-const DATA_TTL_MS = 15 * 60 * 1000;
-const dataCache = new Map<Lang, { at: number; articles: Article[] }>();
-
-async function fetchArchived(lang: Lang): Promise<Article[] | null> {
-  const cached = dataCache.get(lang);
-  if (cached && Date.now() - cached.at < DATA_TTL_MS) return cached.articles;
-  const repo = process.env.DATA_REPO || "ranhanftoke/new-sfeed";
-  const save = (arts: Article[]): Article[] | null => {
-    if (arts.length > 0) dataCache.set(lang, { at: Date.now(), articles: arts });
-    return arts.length > 0 ? arts : (cached?.articles ?? null);
-  };
-  // 1) Public path: raw.githubusercontent.com (works when repo is public)
-  try {
-    const res = await fetch(
-      `https://raw.githubusercontent.com/${repo}/data/data/${lang}/latest.json`,
-      { headers: { "user-agent": "GlobalWireBot/1.0 (+news aggregator)" } },
-    );
-    if (res.ok) {
-      const j = (await res.json()) as { articles?: Article[] };
-      const r = save(Array.isArray(j.articles) ? j.articles : []);
-      if (r) return r;
-    }
-  } catch {
-    // try private-repo fallback below
-  }
-  // 2) Private-repo fallback: GitHub API with token (server-side only,
-  //    set GITHUB_DATA_TOKEN env on the host; never expose to the client)
-  const ghToken = process.env.GITHUB_DATA_TOKEN;
-  if (ghToken) {
-    try {
-      const r = await fetch(
-        `https://api.github.com/repos/${repo}/contents/data/${lang}/latest.json?ref=data`,
-        {
-          headers: {
-            Authorization: `Bearer ${ghToken}`,
-            Accept: "application/vnd.github+json",
-            "user-agent": "GlobalWireBot/1.0 (+news aggregator)",
-          },
-        },
-      );
-      if (r.ok) {
-        const j = (await r.json()) as { content?: string };
-        const parsed = JSON.parse(
-          Buffer.from(j.content ?? "", "base64").toString("utf-8"),
-        ) as { articles?: Article[] };
-        const out = save(Array.isArray(parsed.articles) ? parsed.articles : []);
-        if (out) return out;
-      }
-    } catch {
-      // fall through to RSS
-    }
-  }
-  return cached?.articles ?? null;
-}
-
-/**
- * Article store for a language.
- * 1) GitHub data-branch archive first (stable URLs, permanent history).
- * 2) Fallback: live RSS + 15-minute in-memory cache (previous behavior).
- */
-/** Original editorial articles (src/data/editorial.json on main). They are
- *  merged at read time and never touched by the ingestion workflow, so a
- *  fresh ingest can never overwrite or delete them. The file lives on main
- *  (not the data branch) so it deploys with the site; bundled copy is the
- *  offline fallback. */
-const EDITORIAL_FALLBACK = editorialJson as Article[];
-const editorialCache = new Map<Lang, { at: number; articles: Article[] }>();
-
-async function getEditorial(lang: Lang): Promise<Article[]> {
-  const cached = editorialCache.get(lang);
-  if (cached && Date.now() - cached.at < DATA_TTL_MS) return cached.articles;
-  const repo = process.env.DATA_REPO || "ranhanftoke/new-sfeed";
-  try {
-    const res = await fetch(
-      `https://raw.githubusercontent.com/${repo}/main/src/data/editorial.json`,
-      { headers: { "user-agent": "GlobalWireBot/1.0 (+news aggregator)" } },
-    );
-    if (res.ok) {
-      const j = (await res.json()) as Article[];
-      if (Array.isArray(j) && j.length > 0) {
-        const rows = j.filter((a) => a.lang === lang);
-        editorialCache.set(lang, { at: Date.now(), articles: rows });
-        return rows;
-      }
-    }
-  } catch {
-    // fall through to bundled fallback
-  }
-  return EDITORIAL_FALLBACK.filter((a) => a.lang === lang);
-}
-
-function mergeEditorial(rows: Article[], editorial: Article[]): Article[] {
-  const seen = new Set(rows.map((a) => a.slug));
-  return [...rows, ...editorial.filter((a) => !seen.has(a.slug))];
-}
-
+/** Cached article store for a language; refreshes at most every 15 minutes. */
 export async function getArticles(lang: Lang): Promise<Article[]> {
-  const editorial = await getEditorial(lang);
-  const archived = await fetchArchived(lang);
-  if (archived && archived.length > 0) return mergeEditorial(archived, editorial);
-
   const cached = cache.get(lang);
   if (cached && Date.now() - cached.at < TTL_MS) return cached.articles;
 
@@ -438,54 +326,13 @@ export async function getArticles(lang: Lang): Promise<Article[]> {
   if (existing) return existing;
 
   const job = ingest(lang)
-    .then((arts) => {
-      if (arts.length > 0) cache.set(lang, { at: Date.now(), articles: arts });
-      return arts.length > 0 ? arts : (cached?.articles ?? []);
+    .then((articles) => {
+      if (articles.length > 0) cache.set(lang, { at: Date.now(), articles });
+      return articles.length > 0 ? articles : (cached?.articles ?? []);
     })
     .catch(() => cached?.articles ?? [])
     .finally(() => inflight.delete(lang));
 
   inflight.set(lang, job);
-  const base = await job;
-  return mergeEditorial(base, editorial);
-}
-
-/**
- * Permanent single-article lookup.
- * latest.json keeps only the newest 500; older articles live forever as
- * individual files at data/{lang}/articles/{slug}.json on the data branch.
- */
-const articleFileCache = new Map<string, { at: number; article: Article | null }>();
-const ARTICLE_FILE_TTL_MS = 60 * 60 * 1000; // 1h — archived articles are immutable
-
-async function fetchArchivedArticleFile(lang: Lang, slug: string): Promise<Article | null> {
-  const key = `${lang}/${slug}`;
-  const cached = articleFileCache.get(key);
-  if (cached && Date.now() - cached.at < ARTICLE_FILE_TTL_MS) return cached.article;
-  const repo = process.env.DATA_REPO || "ranhanftoke/new-sfeed";
-  try {
-    const res = await fetch(
-      `https://raw.githubusercontent.com/${repo}/data/data/${lang}/articles/${encodeURIComponent(slug)}.json`,
-      { headers: { "user-agent": "GlobalWireBot/1.0 (+news aggregator)" } },
-    );
-    if (res.ok) {
-      const j = (await res.json()) as { article?: Article };
-      if (j.article && j.article.slug === slug) {
-        articleFileCache.set(key, { at: Date.now(), article: j.article });
-        return j.article;
-      }
-    }
-  } catch {
-    // not found — cache the miss briefly to avoid hammering
-  }
-  articleFileCache.set(key, { at: Date.now(), article: null });
-  return null;
-}
-
-/** Find one article by slug: latest.json first, then the permanent archive file. */
-export async function getArticleBySlug(lang: Lang, slug: string): Promise<Article | null> {
-  const all = await getArticles(lang);
-  const hit = all.find((a) => a.slug === slug);
-  if (hit) return hit;
-  return fetchArchivedArticleFile(lang, slug);
+  return job;
 }

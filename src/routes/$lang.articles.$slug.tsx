@@ -2,9 +2,8 @@ import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 
 import { AdSlot } from "@/components/site/AdSlot";
 import { ArticleCard } from "@/components/site/ArticleCard";
+import { Breadcrumbs, breadcrumbJsonLd } from "@/components/site/Breadcrumbs";
 import { GlobalScoreCallout } from "@/components/site/GlobalScoreCallout";
-import { WhyItMatters } from "@/components/site/WhyItMatters";
-import ReactMarkdown, { type Components } from "react-markdown";
 import { T, formatDate, isLang, type Lang } from "@/lib/i18n";
 import { getArticleData } from "@/lib/news.functions";
 
@@ -45,17 +44,18 @@ export const Route = createFileRoute("/$lang/articles/$slug")({
     }
     return {
       meta,
-      links: [
-        { rel: "canonical", href: url },
-        ...(article.isEditorial
-          ? (["en", "ar", "zh"] as const).map((l) => ({
-              rel: "alternate",
-              hrefLang: l,
-              href: `https://new-sfeed.lovable.app/${l}/articles/${article.slug}`,
-            }))
-          : []),
-      ],
+      links: [{ rel: "canonical", href: url }],
       scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(
+            breadcrumbJsonLd([
+              { name: t.home, path: `/${lang}` },
+              { name: t.categories[article.category], path: `/${lang}/category/${article.category}` },
+              { name: article.title, path: `/${lang}/articles/${article.slug}` },
+            ]),
+          ),
+        },
         {
           type: "application/ld+json",
           children: JSON.stringify({
@@ -70,11 +70,8 @@ export const Route = createFileRoute("/$lang/articles/$slug")({
             keywords: article.tags.join(", "),
             image: article.image ? [article.image] : undefined,
             publisher: { "@type": "Organization", name: t.siteName },
-            author: {
-              "@type": "Organization",
-              name: article.isEditorial ? "Global Wire Editors" : article.source,
-            },
-            ...(article.isEditorial ? {} : { isBasedOn: article.link }),
+            author: { "@type": "Organization", name: article.source },
+            isBasedOn: article.link,
             mainEntityOfPage: { "@type": "WebPage", "@id": url },
           }),
         },
@@ -90,7 +87,7 @@ function ArticlePage() {
   const { lang: raw } = Route.useParams();
   const lang = (isLang(raw) ? raw : "en") as Lang;
   const t = T[lang];
-  const { article, related, inline, popular, isDeveloping } = Route.useLoaderData();
+  const { article, related, inline, popular } = Route.useLoaderData();
   const L = LABELS[lang];
 
   const paragraphs = article.content
@@ -106,6 +103,7 @@ function ArticlePage() {
   return (
     <div className="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
       <article className="min-w-0">
+        <Breadcrumbs lang={lang} category={article.category} title={article.title} />
         <Link
           to="/$lang/category/$slug"
           params={{ lang, slug: article.category }}
@@ -121,19 +119,6 @@ function ArticlePage() {
           {t.published}:{" "}
           <time dateTime={article.publishedAt}>{formatDate(article.publishedAt, lang)}</time>
         </p>
-
-        {article.isEditorial ? (
-          <p className="mt-3 inline-block border-2 border-foreground px-2 py-1 text-xs font-semibold">
-            {lang === "ar" ? "تحرير أصلي" : lang === "zh" ? "原创编辑" : "Original Editorial"}
-          </p>
-        ) : null}
-
-        <WhyItMatters
-          lang={lang}
-          article={article}
-          relatedCount={related.length}
-          isDeveloping={isDeveloping}
-        />
 
         {article.image ? (
           <figure className="mt-6">
@@ -156,14 +141,7 @@ function ArticlePage() {
           </figure>
         ) : null}
 
-        {article.aiArticle ? (
-          <>
-            <div className="article-body mt-6">
-              <ReactMarkdown components={mdComponents}>{article.aiArticle}</ReactMarkdown>
-            </div>
-          </>
-        ) : (
-          <div className="article-body mt-6 space-y-4">
+        <div className="article-body mt-6 space-y-4">
           {paragraphs.map((paragraph, i) => {
             const linkIdx = i === 0 ? 0 : i === 2 ? 1 : -1;
             const rec = linkIdx >= 0 ? inline[linkIdx] : undefined;
@@ -198,23 +176,20 @@ function ArticlePage() {
                 </Link>
               </p>
             ))}
-          </div>
-        )}
+        </div>
 
         {article.category === "sports" ? <GlobalScoreCallout lang={lang} /> : null}
 
         <AdSlot variant="in-article" label={t.advertisement} className="my-8" />
 
-        {article.isEditorial ? null : (
-          <a
-            href={article.link}
-            target="_blank"
-            rel="nofollow noopener noreferrer"
-            className="inline-block border-2 border-foreground px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
-          >
-            {t.readOriginal}
-          </a>
-        )}
+        <a
+          href={article.link}
+          target="_blank"
+          rel="nofollow noopener noreferrer"
+          className="inline-block border-2 border-foreground px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
+        >
+          {t.readOriginal}
+        </a>
 
         {article.tags.length > 0 ? (
           <ul className="mt-8 flex flex-wrap gap-2">
@@ -280,36 +255,6 @@ function ArticlePage() {
     </div>
   );
 }
-
-const mdComponents: Components = {
-  h2: ({ node, ...props }) => (
-    <h2 className="mt-8 font-display text-xl font-bold text-foreground" {...props} />
-  ),
-  p: ({ node, ...props }) => (
-    <p className="mt-4 leading-relaxed text-foreground/90" {...props} />
-  ),
-  a: ({ node, href, ...props }) => {
-    const external = href?.startsWith("http");
-    return (
-      <a
-        href={href}
-        {...(external ? { target: "_blank", rel: "nofollow noopener noreferrer" } : {})}
-        className="font-medium text-primary underline underline-offset-4 hover:no-underline"
-        {...props}
-      />
-    );
-  },
-  strong: ({ node, ...props }) => (
-    <strong className="font-semibold text-foreground" {...props} />
-  ),
-  ul: ({ node, ...props }) => (
-    <ul className="mt-4 list-disc space-y-2 ps-5 text-foreground/90" {...props} />
-  ),
-  ol: ({ node, ...props }) => (
-    <ol className="mt-4 list-decimal space-y-2 ps-5 text-foreground/90" {...props} />
-  ),
-  li: ({ node, ...props }) => <li className="leading-relaxed" {...props} />,
-};
 
 const LABELS: Record<Lang, { alsoRead: string; mostRead: string }> = {
   en: { alsoRead: "Also read", mostRead: "Most read" },

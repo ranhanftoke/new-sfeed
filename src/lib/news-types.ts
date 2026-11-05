@@ -10,19 +10,12 @@ export type Article = {
   category: Category;
   lang: Lang;
   publishedAt: string;
+  publishedAtEstimated: boolean;
   image: string | null;
   tags: string[];
-  /** Optional editorial note ("why it matters"). Shown above the auto context box. */
-  editorial?: string | null;
-  /** AI-generated professional article body (null until generated). */
-  aiArticle?: string | null;
-  /** True for original editorial articles (site's own content, not aggregation). */
-  isEditorial?: boolean;
-  /** ISO timestamp of when aiArticle was generated. */
-  aiGeneratedAt?: string | null;
 };
 
-export type ArticleCardData = Omit<Article, "content" | "aiArticle" | "aiGeneratedAt">;
+export type ArticleCardData = Omit<Article, "content" | "publishedAtEstimated">;
 
 export type HomeData = {
   lead: ArticleCardData | null;
@@ -43,6 +36,4 @@ export type ArticlePageData = {
   related: ArticleCardData[];
   inline: ArticleCardData[];
   popular: ArticleCardData[];
-  /** True when the article was published less than 6h ago (computed server-side). */
-  isDeveloping: boolean;
 };

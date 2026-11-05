@@ -10,7 +10,7 @@ import type {
 } from "./news-types";
 
 function card(a: Article): ArticleCardData {
-  const { content: _content, aiArticle: _ai, aiGeneratedAt: _aig, ...rest } = a;
+  const { content: _content, publishedAtEstimated: _estimated, ...rest } = a;
   return rest;
 }
 
@@ -71,10 +71,10 @@ export const getArticleData = createServerFn({ method: "GET" })
     slug: String(input?.slug ?? "").slice(0, 200),
   }))
   .handler(async ({ data }): Promise<ArticlePageData | null> => {
-    const { getArticleBySlug, getArticles } = await import("./feeds.server");
-    const article = await getArticleBySlug(data.lang, data.slug);
-    if (!article) return null;
+    const { getArticles } = await import("./feeds.server");
     const all = await getArticles(data.lang);
+    const article = all.find((a) => a.slug === data.slug);
+    if (!article) return null;
 
     const tags = new Set(article.tags);
     const scored = all
@@ -102,8 +102,7 @@ export const getArticleData = createServerFn({ method: "GET" })
       .slice(0, 6)
       .map(card);
 
-    const isDeveloping = Date.now() - new Date(article.publishedAt).getTime() < 6 * 3600 * 1000;
-    return { article, related: scored, inline, popular, isDeveloping };
+    return { article, related: scored, inline, popular };
   });
 
 export const searchArticles = createServerFn({ method: "GET" })

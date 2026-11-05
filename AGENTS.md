@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep visible breadcrumbs and their `BreadcrumbList` JSON-LD aligned through the shared site breadcrumb helper, so crawlers and readers see the same hierarchy.
