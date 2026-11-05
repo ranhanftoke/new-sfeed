@@ -10,11 +10,12 @@ export type Article = {
   category: Category;
   lang: Lang;
   publishedAt: string;
+  publishedAtEstimated: boolean;
   image: string | null;
   tags: string[];
 };
 
-export type ArticleCardData = Omit<Article, "content">;
+export type ArticleCardData = Omit<Article, "content" | "publishedAtEstimated">;
 
 export type HomeData = {
   lead: ArticleCardData | null;

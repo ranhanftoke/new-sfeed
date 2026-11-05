@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { LANGS, T } from "@/lib/i18n";
+import { isEligibleNewsSitemapArticle } from "@/lib/news-sitemap";
 
 // Google News only accepts stories published in the last 2 days, max 1000 URLs.
 const FRESH_WINDOW_MS = 48 * 60 * 60 * 1000;
@@ -34,13 +35,13 @@ export const Route = createFileRoute("/news-sitemap.xml")({
           if (entries.length >= MAX_ENTRIES) break;
           const publication = escapeXml(T[lang].siteName);
           const articles = (await getArticles(lang))
-            .filter((a) => now - new Date(a.publishedAt).getTime() <= FRESH_WINDOW_MS)
+            .filter((a) => isEligibleNewsSitemapArticle(a.publishedAt, a.publishedAtEstimated, now))
             .sort((x, y) => y.publishedAt.localeCompare(x.publishedAt))
             .slice(0, MAX_ENTRIES - entries.length);
 
           for (const article of articles) {
             entries.push(
-              `<url><loc>${escapeXml(`${origin}/${lang}/articles/${article.slug}`)}</loc>` +
+              `<url><loc>${escapeXml(encodeURI(`${origin}/${lang}/articles/${article.slug}`))}</loc>` +
                 `<news:news><news:publication><news:name>${publication}</news:name>` +
                 `<news:language>${lang}</news:language></news:publication>` +
                 `<news:publication_date>${newsDate(article.publishedAt)}</news:publication_date>` +

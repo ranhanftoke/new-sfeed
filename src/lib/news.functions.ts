@@ -2,14 +2,15 @@ import { createServerFn } from "@tanstack/react-start";
 
 import { CATEGORIES, isCategory, isLang, type Category, type Lang } from "./i18n";
 import type {
+  Article,
   ArticleCardData,
   ArticlePageData,
   CategoryPageData,
   HomeData,
 } from "./news-types";
 
-function card(a: { content: string } & ArticleCardData): ArticleCardData {
-  const { content: _content, ...rest } = a;
+function card(a: Article): ArticleCardData {
+  const { content: _content, publishedAtEstimated: _estimated, ...rest } = a;
   return rest;
 }
 

@@ -223,14 +223,17 @@ function linkOf(item: Record<string, unknown>): string {
   return text(item["guid"]) || text(item["id"]);
 }
 
-function dateOf(item: Record<string, unknown>): string {
+function dateOf(item: Record<string, unknown>): { publishedAt: string; estimated: boolean } {
   const raw =
     text(item["pubDate"]) ||
     text(item["published"]) ||
     text(item["updated"]) ||
     text(item["dc:date"]);
-  const parsed = raw ? new Date(raw) : new Date();
-  return (Number.isNaN(parsed.getTime()) ? new Date() : parsed).toISOString();
+  const parsed = raw ? new Date(raw) : null;
+  if (!parsed || Number.isNaN(parsed.getTime())) {
+    return { publishedAt: new Date().toISOString(), estimated: true };
+  }
+  return { publishedAt: parsed.toISOString(), estimated: false };
 }
 
 async function fetchFeed(url: string, lang: Lang, category: Category): Promise<Article[]> {
@@ -261,6 +264,7 @@ async function fetchFeed(url: string, lang: Lang, category: Category): Promise<A
         text(item["summary"]);
       const body = stripHtml(rawBody);
       const summary = body.slice(0, 260);
+      const publicationDate = dateOf(item);
       articles.push({
         slug: slugify(title, link),
         title,
@@ -270,7 +274,8 @@ async function fetchFeed(url: string, lang: Lang, category: Category): Promise<A
         source: sourceName,
         category,
         lang,
-        publishedAt: dateOf(item),
+        publishedAt: publicationDate.publishedAt,
+        publishedAtEstimated: publicationDate.estimated,
         image: firstImage(item, rawBody),
         tags: extractTags(title, body),
       });

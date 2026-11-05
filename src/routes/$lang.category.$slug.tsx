@@ -2,6 +2,7 @@ import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 
 import { AdSlot } from "@/components/site/AdSlot";
 import { ArticleCard } from "@/components/site/ArticleCard";
+import { Breadcrumbs, breadcrumbJsonLd } from "@/components/site/Breadcrumbs";
 import { T, isCategory, isLang, type Category, type Lang } from "@/lib/i18n";
 import { getCategoryData } from "@/lib/news.functions";
 
@@ -38,6 +39,17 @@ export const Route = createFileRoute("/$lang/category/$slug")({
         { name: "twitter:card", content: "summary_large_image" },
       ],
       links: [{ rel: "canonical", href: `https://new-sfeed.lovable.app/${lang}/category/${category}` }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(
+            breadcrumbJsonLd([
+              { name: t.home, path: `/${lang}` },
+              { name: t.categories[category], path: `/${lang}/category/${category}` },
+            ]),
+          ),
+        },
+      ],
     };
   },
   errorComponent: () => <p className="py-10 text-center text-muted-foreground">—</p>,
@@ -56,6 +68,7 @@ function CategoryPage() {
   return (
     <div className="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
       <div>
+        <Breadcrumbs lang={lang} title={t.categories[category]} />
         <h1 className="border-b-2 border-foreground pb-3 font-display text-3xl font-bold text-foreground">
           {t.categories[category]}
         </h1>

@@ -2,6 +2,7 @@ import { Link, createFileRoute, notFound } from "@tanstack/react-router";
 
 import { AdSlot } from "@/components/site/AdSlot";
 import { ArticleCard } from "@/components/site/ArticleCard";
+import { Breadcrumbs, breadcrumbJsonLd } from "@/components/site/Breadcrumbs";
 import { GlobalScoreCallout } from "@/components/site/GlobalScoreCallout";
 import { T, formatDate, isLang, type Lang } from "@/lib/i18n";
 import { getArticleData } from "@/lib/news.functions";
@@ -45,6 +46,16 @@ export const Route = createFileRoute("/$lang/articles/$slug")({
       meta,
       links: [{ rel: "canonical", href: url }],
       scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify(
+            breadcrumbJsonLd([
+              { name: t.home, path: `/${lang}` },
+              { name: t.categories[article.category], path: `/${lang}/category/${article.category}` },
+              { name: article.title, path: `/${lang}/articles/${article.slug}` },
+            ]),
+          ),
+        },
         {
           type: "application/ld+json",
           children: JSON.stringify({
@@ -92,6 +103,7 @@ function ArticlePage() {
   return (
     <div className="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
       <article className="min-w-0">
+        <Breadcrumbs lang={lang} category={article.category} title={article.title} />
         <Link
           to="/$lang/category/$slug"
           params={{ lang, slug: article.category }}
