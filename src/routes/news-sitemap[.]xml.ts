@@ -4,7 +4,6 @@ import { LANGS, T } from "@/lib/i18n";
 import { isEligibleNewsSitemapArticle } from "@/lib/news-sitemap";
 
 // Google News only accepts stories published in the last 2 days, max 1000 URLs.
-const FRESH_WINDOW_MS = 48 * 60 * 60 * 1000;
 const MAX_ENTRIES = 1000;
 
 function escapeXml(value: string): string {
