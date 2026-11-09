@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { LANGS, T } from "@/lib/i18n";
-import { GOOGLE_NEWS_MAX_AGE_MS, isEligibleNewsSitemapArticle } from "@/lib/news-sitemap";
+import { isEligibleNewsSitemapArticle } from "@/lib/news-sitemap";
 
 // Google News only accepts stories published in the last 2 days, max 1000 URLs.
 const MAX_ENTRIES = 1000;
