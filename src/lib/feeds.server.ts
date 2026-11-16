@@ -2,6 +2,7 @@ import { XMLParser } from "fast-xml-parser";
 
 import { CATEGORIES, type Category, type Lang } from "./i18n";
 import type { Article } from "./news-types";
+import { getOriginalArticles } from "./original-articles";
 
 /** Public RSS/Atom sources per language and category. Failures are tolerated. */
 export const FEEDS: Record<Lang, Record<Category, string[]>> = {
@@ -317,8 +318,8 @@ async function ingest(lang: Lang): Promise<Article[]> {
   );
 }
 
-/** Cached article store for a language; refreshes at most every 15 minutes. */
-export async function getArticles(lang: Lang): Promise<Article[]> {
+/** Cached RSS article store for a language; refreshes at most every 15 minutes. */
+async function getRssArticles(lang: Lang): Promise<Article[]> {
   const cached = cache.get(lang);
   if (cached && Date.now() - cached.at < TTL_MS) return cached.articles;
 
@@ -335,4 +336,22 @@ export async function getArticles(lang: Lang): Promise<Article[]> {
 
   inflight.set(lang, job);
   return job;
+}
+
+/**
+ * All articles for a language: original Global Wire articles first
+ * (newest first), then the RSS wires, deduped by slug.
+ */
+export async function getArticles(lang: Lang): Promise<Article[]> {
+  const [rss, originals] = await Promise.all([
+    getRssArticles(lang),
+    Promise.resolve(getOriginalArticles(lang)),
+  ]);
+  if (originals.length === 0) return rss;
+  const seen = new Set(originals.map((a) => a.slug));
+  const merged = [...originals, ...rss.filter((a) => !seen.has(a.slug))];
+  merged.sort(
+    (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
+  );
+  return merged;
 }

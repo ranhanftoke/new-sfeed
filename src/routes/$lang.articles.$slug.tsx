@@ -71,7 +71,9 @@ export const Route = createFileRoute("/$lang/articles/$slug")({
             image: article.image ? [article.image] : undefined,
             publisher: { "@type": "Organization", name: t.siteName },
             author: { "@type": "Organization", name: article.source },
-            isBasedOn: article.link,
+            ...(article.source === "Global Wire"
+              ? {}
+              : { isBasedOn: article.link }),
             mainEntityOfPage: { "@type": "WebPage", "@id": url },
           }),
         },
@@ -182,14 +184,16 @@ function ArticlePage() {
 
         <AdSlot variant="in-article" label={t.advertisement} className="my-8" />
 
-        <a
-          href={article.link}
-          target="_blank"
-          rel="nofollow noopener noreferrer"
-          className="inline-block border-2 border-foreground px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
-        >
-          {t.readOriginal}
-        </a>
+        {article.source === "Global Wire" ? null : (
+          <a
+            href={article.link}
+            target="_blank"
+            rel="nofollow noopener noreferrer"
+            className="inline-block border-2 border-foreground px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
+          >
+            {t.readOriginal}
+          </a>
+        )}
 
         {article.tags.length > 0 ? (
           <ul className="mt-8 flex flex-wrap gap-2">
