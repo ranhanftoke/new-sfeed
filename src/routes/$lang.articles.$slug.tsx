@@ -1,4 +1,5 @@
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 
 import { AdSlot } from "@/components/site/AdSlot";
 import { ArticleCard } from "@/components/site/ArticleCard";
@@ -6,6 +7,38 @@ import { Breadcrumbs, breadcrumbJsonLd } from "@/components/site/Breadcrumbs";
 import { GlobalScoreCallout } from "@/components/site/GlobalScoreCallout";
 import { T, formatDate, isLang, type Lang } from "@/lib/i18n";
 import { getArticleData } from "@/lib/news.functions";
+
+// Renders markdown-style [label](url) links as <a> elements.
+// Only http(s) URLs become links; anything else stays plain text.
+// Text without links is returned unchanged, so existing articles render exactly as before.
+// (Internal links must be written as absolute https URLs, e.g. the site's own article URLs.)
+function renderInlineLinks(text: string): ReactNode {
+  const linkRe = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+  if (!linkRe.test(text)) return text;
+  linkRe.lastIndex = 0;
+  const parts: ReactNode[] = [];
+  let last = 0;
+  let match: RegExpExecArray | null;
+  let i = 0;
+  while ((match = linkRe.exec(text)) !== null) {
+    if (match.index > last) parts.push(text.slice(last, match.index));
+    parts.push(
+      <a
+        key={i}
+        href={match[2]}
+        target="_blank"
+        rel="noreferrer"
+        className="font-medium text-primary underline underline-offset-4"
+      >
+        {match[1]}
+      </a>,
+    );
+    i += 1;
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+}
 
 export const Route = createFileRoute("/$lang/articles/$slug")({
   loader: async ({ params }) => {
@@ -149,7 +182,7 @@ function ArticlePage() {
             const rec = linkIdx >= 0 ? inline[linkIdx] : undefined;
             return (
               <div key={i} className="space-y-4">
-                <p>{paragraph}</p>
+                <p>{renderInlineLinks(paragraph)}</p>
                 {rec ? (
                   <p className="border-s-4 border-primary bg-muted/50 px-4 py-3 text-base">
                     <span className="eyebrow me-2 text-primary">{L.alsoRead}</span>
